@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { createConfig } from "./createConfig.js";
 import type { Source } from "./source.js";
+import { cliArgs } from "./sources/cliArgs.js";
 import { env } from "./sources/env.js";
 
 function fixed(name: string, data: Record<string, unknown>): Source {
@@ -85,5 +86,20 @@ describe("createConfig", () => {
         expect(config.server.port).toBe(8080);
         expect(config.server.host).toBe("10.0.0.1");
         expect(config.database.url).toBe("postgres://user:pass@host/db");
+    });
+
+    it("cliArgs overrides env for the same leaf; env passes through where CLI is silent", () => {
+        const handle = createConfig({
+            schema: z.object({
+                server: z.object({
+                    port: z.coerce.number().int(),
+                    host: z.string(),
+                }),
+            }),
+            sources: [env({ source: { SERVER_PORT: "1111", SERVER_HOST: "127.0.0.1" } }), cliArgs({ argv: ["--server-port", "2222"] })],
+        });
+        const config = handle.load();
+        expect(config.server.port).toBe(2222);
+        expect(config.server.host).toBe("127.0.0.1");
     });
 });
