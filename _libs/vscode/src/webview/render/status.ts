@@ -1,4 +1,4 @@
-import type { VarStatus } from "@confederation/core/index.js";
+import type { VarStatus } from "@puristic/env/index.js";
 
 export const STATUS_LABEL: Record<VarStatus, string> = {
     ok: "OK",

@@ -1,4 +1,4 @@
-import { addKey, type EnvDocument, parseEnv, removeKey, serializeEnv, setValue } from "@confederation/core/index.js";
+import { addKey, type EnvDocument, parseEnv, removeKey, serializeEnv, setValue } from "@puristic/env/index.js";
 import * as vscode from "vscode";
 
 type Mutation = (doc: EnvDocument) => EnvDocument;

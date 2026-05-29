@@ -10,7 +10,7 @@ import {
     resolvePublicKey,
     serializeEnv,
     setValue,
-} from "@confederation/core/index.js";
+} from "@puristic/env/index.js";
 import { findNearestConfig } from "./discoverConfig.js";
 
 export interface EncryptAllOptions {
@@ -34,7 +34,7 @@ export async function encryptAll(options: EncryptAllOptions): Promise<EncryptAll
         const envPath = resolve(cwd, file);
         const configPath = override ?? findNearestConfig(dirname(envPath));
         if (configPath === undefined) {
-            throw new Error(`No confederation.config.* governs ${envPath}. Pass --config <path>.`);
+            throw new Error(`No env.config.* governs ${envPath}. Pass --config <path>.`);
         }
         files.push(encryptFile(cwd, envPath, await secretEnvNames(configPath, secretsByConfig)));
     }

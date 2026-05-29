@@ -10,14 +10,14 @@ let dir: string;
 const savedEnv = { ...process.env };
 
 beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "confederation-resolve-"));
-    delete process.env["CONFEDERATION_PRIVATE_KEY"];
-    delete process.env["CONFEDERATION_PRIVATE_KEY_FILE"];
+    dir = mkdtempSync(join(tmpdir(), "puristic-resolve-"));
+    delete process.env["PURISTIC_PRIVATE_KEY"];
+    delete process.env["PURISTIC_PRIVATE_KEY_FILE"];
 });
 
 afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
-    for (const k of ["CONFEDERATION_PRIVATE_KEY", "CONFEDERATION_PRIVATE_KEY_FILE"]) {
+    for (const k of ["PURISTIC_PRIVATE_KEY", "PURISTIC_PRIVATE_KEY_FILE"]) {
         if (savedEnv[k] !== undefined) {
             process.env[k] = savedEnv[k];
         } else {
@@ -32,7 +32,7 @@ function writeProject(name: string): string {
 }
 
 describe("resolvePublicKey", () => {
-    it("reads the public key from .config/confederation-pub.key relative to the project root", () => {
+    it("reads the public key from .config/puristic-pub.key relative to the project root", () => {
         const projectRoot = writeProject("test-project");
         mkdirSync(join(projectRoot, ".config"));
         const { publicKey } = generateKeypair();
@@ -43,7 +43,7 @@ describe("resolvePublicKey", () => {
 
     it("throws a helpful error if the public key file is missing", () => {
         const projectRoot = writeProject("test-project");
-        expect(() => resolvePublicKey(projectRoot)).toThrow(/confederation keygen/);
+        expect(() => resolvePublicKey(projectRoot)).toThrow(/puristic keygen/);
     });
 });
 
@@ -60,24 +60,24 @@ describe("resolvePrivateKey", () => {
         expect(resolvePrivateKey({ privateKeyPath: path })).toEqual(base64urlDecode(privateKey));
     });
 
-    it("reads CONFEDERATION_PRIVATE_KEY env var", () => {
+    it("reads PURISTIC_PRIVATE_KEY env var", () => {
         const { privateKey } = generateKeypair();
-        process.env["CONFEDERATION_PRIVATE_KEY"] = privateKey;
+        process.env["PURISTIC_PRIVATE_KEY"] = privateKey;
         expect(resolvePrivateKey()).toEqual(base64urlDecode(privateKey));
     });
 
-    it("reads CONFEDERATION_PRIVATE_KEY_FILE env var", () => {
+    it("reads PURISTIC_PRIVATE_KEY_FILE env var", () => {
         const { privateKey } = generateKeypair();
         const path = join(dir, "from-env.key");
         writeFileSync(path, privateKey);
-        process.env["CONFEDERATION_PRIVATE_KEY_FILE"] = path;
+        process.env["PURISTIC_PRIVATE_KEY_FILE"] = path;
         expect(resolvePrivateKey()).toEqual(base64urlDecode(privateKey));
     });
 
     it("inline privateKey wins over env vars", () => {
         const inline = generateKeypair();
         const env = generateKeypair();
-        process.env["CONFEDERATION_PRIVATE_KEY"] = env.privateKey;
+        process.env["PURISTIC_PRIVATE_KEY"] = env.privateKey;
         expect(resolvePrivateKey({ privateKey: inline.privateKey })).toEqual(base64urlDecode(inline.privateKey));
     });
 

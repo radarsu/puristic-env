@@ -1,4 +1,4 @@
-// Friendly presentation metadata for the Zod string formats surfaced by @confederation/core's
+// Friendly presentation metadata for the Zod string formats surfaced by @puristic/env's
 // inspectSchema (keyed by the raw zod format value, e.g. "ipv4"). Both the host (typeLabel) and the
 // webview (input type / placeholder / inputmode) read from here.
 

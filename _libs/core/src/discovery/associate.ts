@@ -1,6 +1,6 @@
 import { dirOf, isAncestorOrSame } from "./paths.js";
 
-// Associate each .env file with the nearest ancestor confederation.config.* (the owning schema).
+// Associate each .env file with the nearest ancestor env.config.* (the owning schema).
 // Returns fileId -> configId, or undefined when no config governs that directory.
 export function associateConfigs(envFileIds: string[], configIds: string[]): Map<string, string | undefined> {
     const configDirs = configIds.map((configId) => ({ configId, dir: dirOf(configId) }));

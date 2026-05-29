@@ -1,5 +1,5 @@
 import { dirname } from "node:path";
-import { getValue, isEnvelope, parseEnv } from "@confederation/core/index.js";
+import { getValue, isEnvelope, parseEnv } from "@puristic/env/index.js";
 import * as vscode from "vscode";
 import type { HostToWebview, WebviewToHost } from "../../shared/protocol.js";
 import type { ConfigHostManager } from "../configHost/manager.js";
@@ -12,7 +12,7 @@ import { isEnvUri, readText, relativeId, toUri } from "./uris.js";
 import { renderWebviewHtml } from "./webviewHtml.js";
 
 export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
-    public static readonly viewType = "confederation.envEditor";
+    public static readonly viewType = "puristic.envEditor";
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -61,9 +61,9 @@ export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
             }),
         );
 
-        const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, "**/{.env*,confederation.config.*}"));
+        const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, "**/{.env*,env.config.*}"));
         const onFsEvent = (uri: vscode.Uri): void => {
-            if (uri.path.includes("confederation.config.")) {
+            if (uri.path.includes("env.config.")) {
                 this.manager.restart(uri.fsPath);
             }
             refresh();
@@ -109,7 +109,7 @@ export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
                     await removeEnvKey(toUri(folder, message.fileId), message.envName);
                     return;
                 case "resetToDefault":
-                    // Removing the override lets confederation apply the schema default at load time.
+                    // Removing the override lets puristic apply the schema default at load time.
                     await removeEnvKey(toUri(folder, message.fileId), message.envName);
                     return;
                 case "addAllMissing":

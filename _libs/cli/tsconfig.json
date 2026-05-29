@@ -8,6 +8,6 @@
     },
     "include": ["./src/**/*"],
     "exclude": ["./src/**/*.test.ts"],
-    "extends": "@confederation/tsconfig/tsconfig.base.json",
+    "extends": "@puristic/tsconfig/tsconfig.base.json",
     "references": [{ "path": "../core" }]
 }

@@ -9,7 +9,7 @@ const sample: ValidateResult = {
     files: [
         {
             path: ".env.local",
-            configPath: "confederation.config.ts",
+            configPath: "env.config.ts",
             rows: [
                 { envName: "DATABASE_URL", status: "missing-required", message: "Required secret is missing" },
                 { envName: "LEGACY_FLAG", status: "unknown", message: "Not defined in the schema" },
@@ -23,7 +23,7 @@ const sample: ValidateResult = {
 describe("renderHuman", () => {
     it("shows the file, its statuses, and a summary", () => {
         const out = renderHuman(sample);
-        expect(out).toContain(".env.local  (config: confederation.config.ts)");
+        expect(out).toContain(".env.local  (config: env.config.ts)");
         expect(out).toContain("MISSING");
         expect(out).toContain("DATABASE_URL");
         expect(out).toContain("✗ 1 error, 1 warning");

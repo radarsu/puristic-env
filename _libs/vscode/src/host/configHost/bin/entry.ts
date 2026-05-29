@@ -3,8 +3,8 @@ import { pathToFileURL } from "node:url";
 import type { ConfigHostRequest, ConfigHostResponse } from "../protocol.js";
 
 // Runs as a forked Node 24 process (never the extension host). It evaluates the user's
-// confederation.config.* via Node's native TS type-stripping and answers introspect/validate
-// over the fork IPC channel. @confederation/core and the user's config are resolved relative to
+// env.config.* via Node's native TS type-stripping and answers introspect/validate
+// over the fork IPC channel. @puristic/env and the user's config are resolved relative to
 // the config file so they share one zod instance (so `.meta({secret})` registry lookups resolve).
 
 interface CoreApi {
@@ -56,7 +56,7 @@ async function load(): Promise<{ core: CoreApi; definition: Definition }> {
     }
     const configUrl = pathToFileURL(configPath);
     const require = createRequire(configUrl);
-    const coreUrl = pathToFileURL(require.resolve("@confederation/core/index.js")).href;
+    const coreUrl = pathToFileURL(require.resolve("@puristic/env/index.js")).href;
     const core = (await import(coreUrl)) as unknown as CoreApi;
     const module = (await import(configUrl.href)) as Record<string, unknown>;
     loaded = { core, definition: core.extractDefinition(module) };

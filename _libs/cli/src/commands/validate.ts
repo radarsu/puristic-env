@@ -22,7 +22,7 @@ export const validateCommand = buildCommand<ValidateFlags, string[], CliContext>
             config: {
                 kind: "parsed",
                 parse: String,
-                brief: "Use this confederation.config.* for every file (overrides nearest-ancestor discovery)",
+                brief: "Use this env.config.* for every file (overrides nearest-ancestor discovery)",
                 optional: true,
             },
             strict: { kind: "boolean", brief: "Treat unknown keys (present in .env, absent from the schema) as errors", default: false },
@@ -38,8 +38,8 @@ export const validateCommand = buildCommand<ValidateFlags, string[], CliContext>
         },
     },
     docs: {
-        brief: "Validate .env files against their confederation.config schema",
+        brief: "Validate .env files against their env.config schema",
         fullDescription:
-            "Loads the confederation.config.* governing each .env file, then reports every variable as ok / missing-required / using-default / invalid / unknown / secret-* — the same status model as the VSCode editor. Exits non-zero when any error-level status is found, so it can gate CI and pre-commit hooks.",
+            "Loads the env.config.* governing each .env file, then reports every variable as ok / missing-required / using-default / invalid / unknown / secret-* — the same status model as the VSCode editor. Exits non-zero when any error-level status is found, so it can gate CI and pre-commit hooks.",
     },
 });

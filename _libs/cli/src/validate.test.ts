@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { LeafDescriptorPublic, ValidationReport } from "@confederation/core/index.js";
+import type { LeafDescriptorPublic, ValidationReport } from "@puristic/env/index.js";
 import { describe, expect, it } from "vitest";
 import { classifyEnv, validate } from "./validate.js";
 

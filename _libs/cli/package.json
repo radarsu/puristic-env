@@ -1,5 +1,5 @@
 {
-    "name": "@confederation/cli",
+    "name": "@puristic/env-cli",
     "version": "0.0.0",
     "license": "MIT",
     "type": "module",
@@ -16,13 +16,13 @@
         "registry": "https://registry.npmjs.org/"
     },
     "bin": {
-        "confederation": "./dist/bin.js"
+        "puristic": "./dist/bin.js"
     },
     "exports": {
         "./bin.js": {
             "types": "./dist/bin.d.ts",
             "import": {
-                "@confederation/src": "./src/bin.ts",
+                "@puristic/src": "./src/bin.ts",
                 "default": "./dist/bin.js"
             }
         }
@@ -34,12 +34,12 @@
         "test:watch": "vitest"
     },
     "dependencies": {
-        "@confederation/core": "workspace:*",
+        "@puristic/env": "workspace:*",
         "@stricli/core": "catalog:",
         "tslib": "catalog:"
     },
     "devDependencies": {
-        "@confederation/tsconfig": "workspace:*",
+        "@puristic/tsconfig": "workspace:*",
         "typescript": "catalog:",
         "vitest": "catalog:"
     }

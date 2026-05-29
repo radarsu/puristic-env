@@ -11,6 +11,6 @@ export const decryptCommand = buildCommand<{}, [string]>({
     docs: {
         brief: "Decrypt a single encrypted value using the project private key",
         fullDescription:
-            "Reads the configured private key (CONFEDERATION_PRIVATE_KEY env var, CONFEDERATION_PRIVATE_KEY_FILE, or the default key path) and prints the decrypted plaintext of the given encrypted:v1: envelope.",
+            "Reads the configured private key (PURISTIC_PRIVATE_KEY env var, PURISTIC_PRIVATE_KEY_FILE, or the default key path) and prints the decrypted plaintext of the given encrypted:v1: envelope.",
     },
 });

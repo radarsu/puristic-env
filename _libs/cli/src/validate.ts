@@ -11,7 +11,7 @@ import {
     type ValidationReport,
     type VarStatus,
     validateValues,
-} from "@confederation/core/index.js";
+} from "@puristic/env/index.js";
 import { findNearestConfig } from "./discoverConfig.js";
 
 const EXCLUDED_DIRS = new Set(["node_modules", "dist", ".cache", ".turbo", ".git"]);

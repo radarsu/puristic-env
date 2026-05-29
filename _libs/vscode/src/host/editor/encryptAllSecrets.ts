@@ -1,5 +1,5 @@
 import { dirname } from "node:path";
-import { getValue, parseEnv } from "@confederation/core/index.js";
+import { getValue, parseEnv } from "@puristic/env/index.js";
 import type * as vscode from "vscode";
 import { encryptForProject } from "../secrets.js";
 import { setEnvValue } from "./documentWrites.js";
@@ -7,7 +7,7 @@ import type { LandscapeService } from "./landscapeService.js";
 import { readText, toUri } from "./uris.js";
 
 // Encrypt every plaintext secret in a .env file in place. Shared by the webview "Encrypt all
-// secrets" action and the confederation.encryptAllSecrets command. Returns how many were encrypted.
+// secrets" action and the puristic.encryptAllSecrets command. Returns how many were encrypted.
 export async function encryptAllSecrets(landscape: LandscapeService, folder: vscode.WorkspaceFolder, fileId: string): Promise<number> {
     const built = await landscape.build(folder, fileId);
     const view = built.files[fileId];

@@ -2,14 +2,14 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { decrypt, encrypt, generateKeypair, isEnvelope, PUBLIC_KEY_PATH } from "@confederation/core/index.js";
+import { decrypt, encrypt, generateKeypair, isEnvelope, PUBLIC_KEY_PATH } from "@puristic/env/index.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { decrypt as decryptCli } from "./decrypt.js";
 import { encryptAll } from "./encryptAll.js";
 import { rotate } from "./rotate.js";
 
-const fixtureConfig = fileURLToPath(new URL("../../vscode/fixtures/api/confederation.config.ts", import.meta.url));
-const savedPrivateKey = process.env["CONFEDERATION_PRIVATE_KEY"];
+const fixtureConfig = fileURLToPath(new URL("../../vscode/fixtures/api/env.config.ts", import.meta.url));
+const savedPrivateKey = process.env["PURISTIC_PRIVATE_KEY"];
 
 let dir: string;
 let keypair: { publicKey: string; privateKey: string };
@@ -25,20 +25,20 @@ function envValue(envPath: string, key: string): string {
 }
 
 beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "confederation-secrets-"));
+    dir = mkdtempSync(join(tmpdir(), "puristic-secrets-"));
     writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "secrets-test" }));
     keypair = generateKeypair();
     mkdirSync(join(dir, ".config"), { recursive: true });
     writeFileSync(join(dir, PUBLIC_KEY_PATH), `${keypair.publicKey}\n`);
-    process.env["CONFEDERATION_PRIVATE_KEY"] = keypair.privateKey;
+    process.env["PURISTIC_PRIVATE_KEY"] = keypair.privateKey;
 });
 
 afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
     if (savedPrivateKey === undefined) {
-        delete process.env["CONFEDERATION_PRIVATE_KEY"];
+        delete process.env["PURISTIC_PRIVATE_KEY"];
     } else {
-        process.env["CONFEDERATION_PRIVATE_KEY"] = savedPrivateKey;
+        process.env["PURISTIC_PRIVATE_KEY"] = savedPrivateKey;
     }
 });
 

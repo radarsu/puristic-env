@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "composite": true,
-        "customConditions": ["@confederation/src"],
+        "customConditions": ["@puristic/src"],
         "declaration": true,
         "declarationMap": true,
         "exactOptionalPropertyTypes": true,

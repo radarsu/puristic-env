@@ -6,16 +6,16 @@ describe("associateConfigs", () => {
     it("matches each .env to its nearest ancestor config", () => {
         const result = associateConfigs(
             ["apps/api/.env", "apps/api/.env.local", "apps/web/.env", "scripts/.env"],
-            ["confederation.config.ts", "apps/api/confederation.config.ts"],
+            ["env.config.ts", "apps/api/env.config.ts"],
         );
-        expect(result.get("apps/api/.env")).toBe("apps/api/confederation.config.ts");
-        expect(result.get("apps/api/.env.local")).toBe("apps/api/confederation.config.ts");
-        expect(result.get("apps/web/.env")).toBe("confederation.config.ts");
-        expect(result.get("scripts/.env")).toBe("confederation.config.ts");
+        expect(result.get("apps/api/.env")).toBe("apps/api/env.config.ts");
+        expect(result.get("apps/api/.env.local")).toBe("apps/api/env.config.ts");
+        expect(result.get("apps/web/.env")).toBe("env.config.ts");
+        expect(result.get("scripts/.env")).toBe("env.config.ts");
     });
 
     it("leaves a .env unassociated when no config governs it", () => {
-        const result = associateConfigs(["a/.env"], ["b/confederation.config.ts"]);
+        const result = associateConfigs(["a/.env"], ["b/env.config.ts"]);
         expect(result.get("a/.env")).toBeUndefined();
     });
 });

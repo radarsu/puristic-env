@@ -8,7 +8,7 @@ import { ConfigHostClient } from "./client.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const entryPath = join(here, "bin", "entry.ts");
 const fixtureDir = join(here, "..", "..", "..", "fixtures", "api");
-const configPath = join(fixtureDir, "confederation.config.ts");
+const configPath = join(fixtureDir, "env.config.ts");
 
 function makeClient(): ConfigHostClient {
     return new ConfigHostClient({ entryPath, configPath, projectRoot: fixtureDir, nodePath: process.execPath, timeoutMs: 15000 });

@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
 import { base64urlDecode } from "./format.js";
 
-export const PUBLIC_KEY_PATH = ".config/confederation-pub.key";
+export const PUBLIC_KEY_PATH = ".config/puristic-pub.key";
 
 export interface DecryptOptions {
     privateKey?: string | Uint8Array;
@@ -15,7 +15,7 @@ export function resolvePublicKey(cwd: string = process.cwd()): Uint8Array {
     const projectRoot = findProjectRoot(cwd);
     const path = join(projectRoot, PUBLIC_KEY_PATH);
     if (!existsSync(path)) {
-        throw new Error(`Public key not found at ${path}. Run \`confederation keygen\` to create one.`);
+        throw new Error(`Public key not found at ${path}. Run \`puristic keygen\` to create one.`);
     }
     return base64urlDecode(readFileSync(path, "utf8").trim());
 }
@@ -27,11 +27,11 @@ export function resolvePrivateKey(options?: DecryptOptions): Uint8Array {
     if (options?.privateKeyPath !== undefined) {
         return readPrivateKeyFile(options.privateKeyPath);
     }
-    const envInline = process.env["CONFEDERATION_PRIVATE_KEY"];
+    const envInline = process.env["PURISTIC_PRIVATE_KEY"];
     if (envInline !== undefined && envInline !== "") {
         return base64urlDecode(envInline);
     }
-    const envPath = process.env["CONFEDERATION_PRIVATE_KEY_FILE"];
+    const envPath = process.env["PURISTIC_PRIVATE_KEY_FILE"];
     if (envPath !== undefined && envPath !== "") {
         return readPrivateKeyFile(envPath);
     }
@@ -39,13 +39,13 @@ export function resolvePrivateKey(options?: DecryptOptions): Uint8Array {
     if (existsSync(defaultPath)) {
         return readPrivateKeyFile(defaultPath);
     }
-    throw new Error(`No private key found. Set CONFEDERATION_PRIVATE_KEY env var, CONFEDERATION_PRIVATE_KEY_FILE, or place key at ${defaultPath}.`);
+    throw new Error(`No private key found. Set PURISTIC_PRIVATE_KEY env var, PURISTIC_PRIVATE_KEY_FILE, or place key at ${defaultPath}.`);
 }
 
 export function defaultPrivateKeyPath(cwd: string): string {
     const projectRoot = findProjectRoot(cwd);
     const name = readProjectName(projectRoot);
-    return join(homedir(), ".config", "confederation", name, "private.key");
+    return join(homedir(), ".config", "puristic", name, "private.key");
 }
 
 export function resolveProjectName(cwd: string = process.cwd()): string {

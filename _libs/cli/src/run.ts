@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { constants } from "node:os";
 import { resolve } from "node:path";
-import { decrypt, expandEnv, inspectSchema, isEnvelope, listEntries, loadDefinition, parseEnv, resolvePrivateKey } from "@confederation/core/index.js";
+import { decrypt, expandEnv, inspectSchema, isEnvelope, listEntries, loadDefinition, parseEnv, resolvePrivateKey } from "@puristic/env/index.js";
 import { findNearestConfig } from "./discoverConfig.js";
 
 const DEFAULT_ENV_FILES = [".env", ".env.local"];
@@ -80,7 +80,7 @@ async function applyDefaults(
 ): Promise<void> {
     const config = configPath !== undefined ? resolve(cwd, configPath) : findNearestConfig(cwd);
     if (config === undefined) {
-        onWarn?.("--defaults: no confederation.config.* found above the current directory; skipping schema defaults.");
+        onWarn?.("--defaults: no env.config.* found above the current directory; skipping schema defaults.");
         return;
     }
     const definition = await loadDefinition(config);

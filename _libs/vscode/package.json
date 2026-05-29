@@ -1,11 +1,11 @@
 {
-    "name": "confederation",
+    "name": "env",
     "version": "0.0.0",
     "license": "MIT",
     "type": "module",
-    "displayName": "Confederation Env Manager",
-    "description": "Manage .env files against confederation.config schemas with validation, encryption, and a cross-service overview.",
-    "publisher": "confederation",
+    "displayName": "Puristic Env Manager",
+    "description": "Manage .env files against env.config schemas with validation, encryption, and a cross-service overview.",
+    "publisher": "puristic",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/radarsu/confederation.git",
@@ -20,13 +20,13 @@
         "Other"
     ],
     "activationEvents": [
-        "workspaceContains:**/confederation.config.{ts,mts,cts,js,mjs,cjs}"
+        "workspaceContains:**/env.config.{ts,mts,cts,js,mjs,cjs}"
     ],
     "contributes": {
         "customEditors": [
             {
-                "viewType": "confederation.envEditor",
-                "displayName": "Confederation Env Manager",
+                "viewType": "puristic.envEditor",
+                "displayName": "Puristic Env Manager",
                 "selector": [
                     {
                         "filenamePattern": ".env"
@@ -40,56 +40,56 @@
         ],
         "commands": [
             {
-                "command": "confederation.openEnvManager",
+                "command": "puristic.openEnvManager",
                 "title": "Open Env Manager",
-                "category": "Confederation"
+                "category": "Puristic"
             },
             {
-                "command": "confederation.rescan",
+                "command": "puristic.rescan",
                 "title": "Re-scan Config & Env Files",
-                "category": "Confederation"
+                "category": "Puristic"
             },
             {
-                "command": "confederation.openAsPlainText",
+                "command": "puristic.openAsPlainText",
                 "title": "Open .env as Plain Text",
-                "category": "Confederation"
+                "category": "Puristic"
             },
             {
-                "command": "confederation.encryptAllSecrets",
+                "command": "puristic.encryptAllSecrets",
                 "title": "Encrypt All Plaintext Secrets",
-                "category": "Confederation"
+                "category": "Puristic"
             }
         ],
         "menus": {
             "commandPalette": [
                 {
-                    "command": "confederation.openEnvManager",
-                    "when": "confederation.isConfederationRepo"
+                    "command": "puristic.openEnvManager",
+                    "when": "puristic.isPuristicRepo"
                 },
                 {
-                    "command": "confederation.rescan",
-                    "when": "confederation.isConfederationRepo"
+                    "command": "puristic.rescan",
+                    "when": "puristic.isPuristicRepo"
                 },
                 {
-                    "command": "confederation.encryptAllSecrets",
-                    "when": "confederation.isConfederationRepo"
+                    "command": "puristic.encryptAllSecrets",
+                    "when": "puristic.isPuristicRepo"
                 }
             ]
         },
         "configuration": {
-            "title": "Confederation Env Manager",
+            "title": "Puristic Env Manager",
             "properties": {
-                "confederation.configFileGlob": {
+                "puristic.configFileGlob": {
                     "type": "string",
-                    "default": "**/confederation.config.{ts,mts,cts,js,mjs,cjs}",
-                    "description": "Glob used to discover confederation config definition files."
+                    "default": "**/env.config.{ts,mts,cts,js,mjs,cjs}",
+                    "description": "Glob used to discover env config definition files."
                 },
-                "confederation.envFileGlob": {
+                "puristic.envFileGlob": {
                     "type": "string",
                     "default": "**/.env*",
                     "description": "Glob used to discover .env files."
                 },
-                "confederation.exclude": {
+                "puristic.exclude": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -103,12 +103,12 @@
                     ],
                     "description": "Glob patterns excluded from discovery."
                 },
-                "confederation.nodePath": {
+                "puristic.nodePath": {
                     "type": "string",
                     "default": "",
-                    "description": "Absolute path to a Node.js 24+ binary used to evaluate confederation.config files. Defaults to `node` on PATH."
+                    "description": "Absolute path to a Node.js 24+ binary used to evaluate env.config files. Defaults to `node` on PATH."
                 },
-                "confederation.configHostTimeoutMs": {
+                "puristic.configHostTimeoutMs": {
                     "type": "number",
                     "default": 10000,
                     "description": "Timeout in milliseconds for a single config-host introspect/validate request."
@@ -124,8 +124,8 @@
         "test:watch": "vitest"
     },
     "devDependencies": {
-        "@confederation/core": "workspace:*",
-        "@confederation/tsconfig": "workspace:*",
+        "@puristic/env": "workspace:*",
+        "@puristic/tsconfig": "workspace:*",
         "@types/node": "catalog:",
         "@types/vscode": "1.96.0",
         "@vscode/vsce": "catalog:",

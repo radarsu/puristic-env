@@ -11,7 +11,7 @@ import {
     resolvePrivateKey,
     serializeEnv,
     setValue,
-} from "@confederation/core/index.js";
+} from "@puristic/env/index.js";
 
 export interface RotateOptions {
     envFiles: string[];

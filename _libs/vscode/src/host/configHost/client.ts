@@ -1,11 +1,11 @@
 import { type ChildProcess, fork } from "node:child_process";
-import type { LeafDescriptorPublic, ValidationReport } from "@confederation/core/index.js";
+import type { LeafDescriptorPublic, ValidationReport } from "@puristic/env/index.js";
 import type { ConfigHostRequest, ConfigHostResponse } from "./protocol.js";
 
 export interface ConfigHostOptions {
     // Path to the forked entry: dist/configHost.mjs in production, the src .ts in tests.
     entryPath: string;
-    // Absolute path to the confederation.config.* file this client introspects.
+    // Absolute path to the env.config.* file this client introspects.
     configPath: string;
     // Working directory for module resolution — the config's project root.
     projectRoot: string;

@@ -22,6 +22,6 @@ export const rotateCommand = buildCommand<{}, string[]>({
     docs: {
         brief: "Rotate the shared keypair and re-encrypt all secrets to the new key",
         fullDescription:
-            "Generates a fresh keypair, decrypts every encrypted value in the given .env files with the current private key, re-encrypts them to the new public key, and overwrites .config/confederation-pub.key. Prints the new private key to redistribute. Requires the current private key.",
+            "Generates a fresh keypair, decrypts every encrypted value in the given .env files with the current private key, re-encrypts them to the new public key, and overwrites .config/puristic-pub.key. Prints the new private key to redistribute. Requires the current private key.",
     },
 });

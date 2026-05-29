@@ -19,13 +19,13 @@ const root = buildRouteMap({
         gen: genCommand,
         run: runCommand,
     },
-    docs: { brief: "Confederation CLI — validate config, generate types, and manage encrypted secrets" },
+    docs: { brief: "Puristic CLI — validate config, generate types, and manage encrypted secrets" },
 });
 
 export const app = buildApplication(root, {
-    name: "confederation",
+    name: "puristic",
     versionInfo: { currentVersion: "0.0.0" },
     // `run -- <cmd>` relies on the argument escape sequence so the child command's flags are passed
-    // through verbatim instead of being parsed as confederation flags.
+    // through verbatim instead of being parsed as puristic flags.
     scanner: { allowArgumentEscapeSequence: true },
 });

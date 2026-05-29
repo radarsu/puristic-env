@@ -1,4 +1,4 @@
-import type { LeafDescriptorPublic, ValidationReport } from "@confederation/core/index.js";
+import type { LeafDescriptorPublic, ValidationReport } from "@puristic/env/index.js";
 
 export type ConfigHostRequest =
     | { id: number; op: "ping" }

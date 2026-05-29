@@ -8,7 +8,7 @@ import { envFile } from "./envFile.js";
 let dir: string;
 
 beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "confederation-"));
+    dir = mkdtempSync(join(tmpdir(), "puristic-"));
 });
 
 afterEach(() => {

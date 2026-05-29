@@ -2,29 +2,29 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { encrypt, generateKeypair } from "@confederation/core/index.js";
+import { encrypt, generateKeypair } from "@puristic/env/index.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { resolveRunEnv, shellQuote, spawnEnv } from "./run.js";
 
-const fixtureConfig = fileURLToPath(new URL("../../vscode/fixtures/api/confederation.config.ts", import.meta.url));
-const savedPrivateKey = process.env["CONFEDERATION_PRIVATE_KEY"];
+const fixtureConfig = fileURLToPath(new URL("../../vscode/fixtures/api/env.config.ts", import.meta.url));
+const savedPrivateKey = process.env["PURISTIC_PRIVATE_KEY"];
 
 let dir: string;
 let keypair: { publicKey: string; privateKey: string };
 
 beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "confederation-run-"));
+    dir = mkdtempSync(join(tmpdir(), "puristic-run-"));
     writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "run-test" }));
     keypair = generateKeypair();
-    process.env["CONFEDERATION_PRIVATE_KEY"] = keypair.privateKey;
+    process.env["PURISTIC_PRIVATE_KEY"] = keypair.privateKey;
 });
 
 afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
     if (savedPrivateKey === undefined) {
-        delete process.env["CONFEDERATION_PRIVATE_KEY"];
+        delete process.env["PURISTIC_PRIVATE_KEY"];
     } else {
-        process.env["CONFEDERATION_PRIVATE_KEY"] = savedPrivateKey;
+        process.env["PURISTIC_PRIVATE_KEY"] = savedPrivateKey;
     }
 });
 
@@ -73,7 +73,7 @@ describe("resolveRunEnv", () => {
         const warnings: string[] = [];
         const env = await resolveRunEnv({ cwd: dir, ambient: {}, defaults: true, onWarn: (message) => warnings.push(message) });
         expect(env).toEqual({ A: "1" });
-        expect(warnings[0]).toContain("no confederation.config.*");
+        expect(warnings[0]).toContain("no env.config.*");
     });
 });
 
@@ -84,7 +84,7 @@ describe("spawnEnv", () => {
     });
 
     it("rejects when the command cannot be spawned", async () => {
-        await expect(spawnEnv("confederation-no-such-binary", [], {}, dir)).rejects.toThrow();
+        await expect(spawnEnv("puristic-no-such-binary", [], {}, dir)).rejects.toThrow();
     });
 });
 

@@ -12,13 +12,13 @@ export const keygenCommand = buildCommand({
         stdout.write(`  ${result.privateKey}\n`);
         stdout.write("\n");
         stdout.write("Save it via one of:\n");
-        stdout.write("  - CONFEDERATION_PRIVATE_KEY env var (CI / production)\n");
+        stdout.write("  - PURISTIC_PRIVATE_KEY env var (CI / production)\n");
         stdout.write(`  - file at ${result.suggestedPrivateKeyPath} (default lookup path, chmod 600)\n`);
     },
     parameters: { positional: { kind: "tuple", parameters: [] } },
     docs: {
         brief: "Generate ML-KEM-512 keypair; write public key file; print private key",
         fullDescription:
-            "Generates a fresh post-quantum keypair (ML-KEM-512). Writes the public key to .config/confederation-pub.key (commit this), and prints the private key to stdout with storage instructions. Refuses to overwrite an existing public key.",
+            "Generates a fresh post-quantum keypair (ML-KEM-512). Writes the public key to .config/puristic-pub.key (commit this), and prints the private key to stdout with storage instructions. Refuses to overwrite an existing public key.",
     },
 });

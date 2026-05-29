@@ -14,5 +14,5 @@
     },
     "include": ["./src/**/*"],
     "exclude": ["./src/**/*.test.ts", "./src/webview/**/*"],
-    "extends": "@confederation/tsconfig/tsconfig.base.json"
+    "extends": "@puristic/tsconfig/tsconfig.base.json"
 }

@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { defaultPrivateKeyPath, generateKeypair, PUBLIC_KEY_PATH, resolveProjectName } from "@confederation/core/index.js";
+import { defaultPrivateKeyPath, generateKeypair, PUBLIC_KEY_PATH, resolveProjectName } from "@puristic/env/index.js";
 
 export interface KeygenResult {
     publicKeyPath: string;

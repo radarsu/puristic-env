@@ -13,7 +13,7 @@ export const encryptAllCommand = buildCommand<{ config?: string }, string[]>({
             config: {
                 kind: "parsed",
                 parse: String,
-                brief: "Use this confederation.config.* (defaults to the nearest one above each file)",
+                brief: "Use this env.config.* (defaults to the nearest one above each file)",
                 optional: true,
             },
         },
@@ -26,6 +26,6 @@ export const encryptAllCommand = buildCommand<{ config?: string }, string[]>({
     docs: {
         brief: "Encrypt all plaintext secret values in one or more .env files",
         fullDescription:
-            "For each file, loads the governing confederation.config.* to find which keys are secret (.meta({ secret: true })), then encrypts every plaintext secret value in place with the project public key. Already-encrypted values are left untouched and comments/order/quotes are preserved. Needs only the public key.",
+            "For each file, loads the governing env.config.* to find which keys are secret (.meta({ secret: true })), then encrypts every plaintext secret value in place with the project public key. Already-encrypted values are left untouched and comments/order/quotes are preserved. Needs only the public key.",
     },
 });

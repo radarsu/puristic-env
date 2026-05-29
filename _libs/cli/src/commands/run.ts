@@ -27,7 +27,7 @@ export const runCommand = buildCommand<RunFlags, string[], CliContext>({
 
         const [program, ...args] = command;
         if (program === undefined) {
-            this.process.stderr.write("No command to run. Usage: confederation run [--env <file>]… -- <command> [args…]\n");
+            this.process.stderr.write("No command to run. Usage: puristic run [--env <file>]… -- <command> [args…]\n");
             this.process.exitCode = 1;
             return;
         }
@@ -51,7 +51,7 @@ export const runCommand = buildCommand<RunFlags, string[], CliContext>({
             config: {
                 kind: "parsed",
                 parse: String,
-                brief: "Path to confederation.config.* for --defaults (defaults to the nearest one above the current directory)",
+                brief: "Path to env.config.* for --defaults (defaults to the nearest one above the current directory)",
                 optional: true,
             },
             defaults: { kind: "boolean", brief: "Inject schema defaults for keys absent from the files and the environment", default: false },
@@ -65,6 +65,6 @@ export const runCommand = buildCommand<RunFlags, string[], CliContext>({
     docs: {
         brief: "Populate the environment from .env files and run a command",
         fullDescription:
-            "Loads .env (then .env.local), decrypts encrypted secret values, expands $VAR and brace-style variable references against sibling values and the current environment, then runs the given command with those variables injected — replacing hand-rolled `KEY=$(… | envsubst) cmd` one-liners. Put `--` before the command so its own flags pass through verbatim. With --print, emits shell `export` lines for `eval \"$(confederation run --print)\"` instead of running anything.",
+            "Loads .env (then .env.local), decrypts encrypted secret values, expands $VAR and brace-style variable references against sibling values and the current environment, then runs the given command with those variables injected — replacing hand-rolled `KEY=$(… | envsubst) cmd` one-liners. Put `--` before the command so its own flags pass through verbatim. With --print, emits shell `export` lines for `eval \"$(puristic run --print)\"` instead of running anything.",
     },
 });

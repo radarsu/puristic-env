@@ -6,7 +6,7 @@ const watch = process.argv.includes("--watch");
 
 // The repo writes relative imports with explicit `.js` extensions (NodeNext style). esbuild does
 // not map `.js` -> `.ts`, so this plugin rewrites relative `.js` specifiers to their `.ts` source
-// when one exists. Package specifiers (e.g. @confederation/core/index.js) and already-built `.js`
+// when one exists. Package specifiers (e.g. @puristic/env/index.js) and already-built `.js`
 // files (core's dist) fall through to esbuild's default resolution.
 const tsExtensionPlugin = {
     name: "resolve-ts-from-js",
@@ -47,7 +47,7 @@ const webviewBuild = {
 
 /**
  * Config-host: standalone ESM script run by a separate Node 24 process (fork). It resolves
- * @confederation/core and the user's confederation.config from the workspace at runtime, so
+ * @puristic/env and the user's env.config from the workspace at runtime, so
  * nothing here is bundled in — only node builtins are used.
  */
 const configHostBuild = {

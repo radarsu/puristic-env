@@ -1,7 +1,7 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { decrypt as decryptValue, encrypt as encryptValue, PUBLIC_KEY_PATH } from "@confederation/core/index.js";
+import { decrypt as decryptValue, encrypt as encryptValue, PUBLIC_KEY_PATH } from "@puristic/env/index.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { encrypt } from "./encrypt.js";
 import { keygen } from "./keygen.js";
@@ -9,7 +9,7 @@ import { keygen } from "./keygen.js";
 let dir: string;
 
 beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "confederation-cli-"));
+    dir = mkdtempSync(join(tmpdir(), "puristic-cli-"));
     writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "cli-test-project" }));
 });
 

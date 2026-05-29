@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { ConfigHostClient } from "./client.js";
 
-// One config-host subprocess per confederation.config file (keyed by its absolute path).
+// One config-host subprocess per env.config file (keyed by its absolute path).
 export class ConfigHostManager {
     private readonly clients = new Map<string, ConfigHostClient>();
 
@@ -36,11 +36,11 @@ export class ConfigHostManager {
     }
 
     private nodePath(): string {
-        const configured = vscode.workspace.getConfiguration("confederation").get<string>("nodePath") ?? "";
+        const configured = vscode.workspace.getConfiguration("puristic").get<string>("nodePath") ?? "";
         return configured !== "" ? configured : "node";
     }
 
     private timeoutMs(): number {
-        return vscode.workspace.getConfiguration("confederation").get<number>("configHostTimeoutMs") ?? 10000;
+        return vscode.workspace.getConfiguration("puristic").get<number>("configHostTimeoutMs") ?? 10000;
     }
 }

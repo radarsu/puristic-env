@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { ConfigHostManager } from "./host/configHost/manager.js";
-import { usesConfederation } from "./host/detectConfederation.js";
+import { usesPuristic } from "./host/detectPuristic.js";
 import { scanWorkspace } from "./host/discovery/scan.js";
 import { encryptAllSecrets } from "./host/editor/encryptAllSecrets.js";
 import { EnvEditorProvider } from "./host/editor/envEditorProvider.js";
@@ -18,13 +18,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             webviewOptions: { retainContextWhenHidden: true },
             supportsMultipleEditorsPerDocument: false,
         }),
-        vscode.commands.registerCommand("confederation.rescan", () => {
+        vscode.commands.registerCommand("puristic.rescan", () => {
             manager.disposeAll();
             void updateContext();
         }),
-        vscode.commands.registerCommand("confederation.openEnvManager", openEnvManager),
-        vscode.commands.registerCommand("confederation.openAsPlainText", openAsPlainText),
-        vscode.commands.registerCommand("confederation.encryptAllSecrets", () => encryptAllSecretsCommand(landscape)),
+        vscode.commands.registerCommand("puristic.openEnvManager", openEnvManager),
+        vscode.commands.registerCommand("puristic.openAsPlainText", openAsPlainText),
+        vscode.commands.registerCommand("puristic.encryptAllSecrets", () => encryptAllSecretsCommand(landscape)),
         vscode.workspace.onDidChangeWorkspaceFolders(() => void updateContext()),
     );
 
@@ -34,13 +34,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 export function deactivate(): void {}
 
 async function updateContext(): Promise<void> {
-    await vscode.commands.executeCommand("setContext", "confederation.isConfederationRepo", await detect());
+    await vscode.commands.executeCommand("setContext", "puristic.isPuristicRepo", await detect());
 }
 
 async function detect(): Promise<boolean> {
     for (const folder of vscode.workspace.workspaceFolders ?? []) {
         const scan = await scanWorkspace(folder);
-        if (usesConfederation(scan.manifests, scan.configIds)) {
+        if (usesPuristic(scan.manifests, scan.configIds)) {
             return true;
         }
     }
@@ -53,7 +53,7 @@ function openEnvManager(): void {
         void vscode.commands.executeCommand("vscode.openWith", uri, EnvEditorProvider.viewType);
         return;
     }
-    void vscode.window.showInformationMessage("Open a .env file first, then run “Confederation: Open Env Manager”.");
+    void vscode.window.showInformationMessage("Open a .env file first, then run “Puristic: Open Env Manager”.");
 }
 
 function openAsPlainText(): void {
@@ -66,7 +66,7 @@ function openAsPlainText(): void {
 async function encryptAllSecretsCommand(landscape: LandscapeService): Promise<void> {
     const uri = activeTabUri();
     if (uri === undefined || !isEnvUri(uri)) {
-        void vscode.window.showInformationMessage("Open a .env file first, then run “Confederation: Encrypt All Plaintext Secrets”.");
+        void vscode.window.showInformationMessage("Open a .env file first, then run “Puristic: Encrypt All Plaintext Secrets”.");
         return;
     }
     const folder = vscode.workspace.getWorkspaceFolder(uri);

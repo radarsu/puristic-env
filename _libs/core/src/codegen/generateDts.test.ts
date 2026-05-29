@@ -18,7 +18,7 @@ const descriptors = inspectSchema(
 );
 
 describe("generateDts", () => {
-    const out = generateDts(descriptors, { source: "confederation.config.ts" });
+    const out = generateDts(descriptors, { source: "env.config.ts" });
 
     it("augments NodeJS.ProcessEnv with raw string values", () => {
         expect(out).toContain("namespace NodeJS {");
@@ -33,8 +33,8 @@ describe("generateDts", () => {
         expect(out).toContain('MODE?: "dev" | "prod";');
     });
 
-    it("emits a nested, coerced ConfederationConfig interface", () => {
-        expect(out).toContain("export interface ConfederationConfig {");
+    it("emits a nested, coerced PuristicConfig interface", () => {
+        expect(out).toContain("export interface PuristicConfig {");
         expect(out).toContain("server: {");
         expect(out).toContain("port: number;");
         expect(out).toContain("host?: string;");

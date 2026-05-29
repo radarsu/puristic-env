@@ -32,7 +32,7 @@ jobs:
           RELEASE_VERSION="${GITHUB_REF_NAME#v}"
           pnpm --dir _libs/core version "$RELEASE_VERSION" --no-git-tag-version --allow-same-version
           pnpm --dir _libs/cli version "$RELEASE_VERSION" --no-git-tag-version --allow-same-version
-      - run: pnpm turbo run build --filter=@confederation/core --filter=@confederation/cli
+      - run: pnpm turbo run build --filter=@puristic/env --filter=@puristic/env-cli
       - name: Publish
         run: |
           pnpm --dir _libs/core publish --access public --no-git-checks
@@ -46,7 +46,7 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Set release version
         run: pnpm --dir _libs/vscode version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
-      - run: pnpm turbo run build --filter=confederation
+      - run: pnpm turbo run build --filter=env
       - name: Publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

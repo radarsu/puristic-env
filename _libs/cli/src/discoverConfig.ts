@@ -2,15 +2,15 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const CONFIG_NAMES = [
-    "confederation.config.ts",
-    "confederation.config.mts",
-    "confederation.config.cts",
-    "confederation.config.js",
-    "confederation.config.mjs",
-    "confederation.config.cjs",
+    "env.config.ts",
+    "env.config.mts",
+    "env.config.cts",
+    "env.config.js",
+    "env.config.mjs",
+    "env.config.cjs",
 ];
 
-// Walk up from startDir to the filesystem root, returning the nearest confederation.config.*.
+// Walk up from startDir to the filesystem root, returning the nearest env.config.*.
 export function findNearestConfig(startDir: string): string | undefined {
     let current = resolve(startDir);
     while (true) {

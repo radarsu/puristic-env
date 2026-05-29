@@ -1,7 +1,7 @@
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { decrypt, PUBLIC_KEY_PATH } from "@confederation/core/index.js";
+import { decrypt, PUBLIC_KEY_PATH } from "@puristic/env/index.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { app } from "./app.js";
 
@@ -39,7 +39,7 @@ let dir: string;
 let originalCwd: string;
 
 beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "confederation-cli-app-"));
+    dir = mkdtempSync(join(tmpdir(), "puristic-cli-app-"));
     writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "app-smoke-test" }));
     originalCwd = process.cwd();
     process.chdir(dir);
@@ -59,7 +59,7 @@ describe("app", () => {
         expect(fake.stdoutText).toContain("Public key written to");
         expect(fake.stdoutText).toContain("Project: app-smoke-test");
         expect(fake.stdoutText).toContain("Private key (do NOT commit");
-        expect(fake.stdoutText).toContain("CONFEDERATION_PRIVATE_KEY env var");
+        expect(fake.stdoutText).toContain("PURISTIC_PRIVATE_KEY env var");
     });
 
     it("encrypt prints an envelope that round-trips through decrypt()", async () => {

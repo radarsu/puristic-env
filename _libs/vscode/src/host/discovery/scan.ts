@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { PackageManifest } from "../detectConfederation.js";
+import type { PackageManifest } from "../detectPuristic.js";
 
 export interface WorkspaceScan {
     folder: vscode.WorkspaceFolder;
@@ -9,9 +9,9 @@ export interface WorkspaceScan {
 }
 
 export async function scanWorkspace(folder: vscode.WorkspaceFolder): Promise<WorkspaceScan> {
-    const config = vscode.workspace.getConfiguration("confederation");
+    const config = vscode.workspace.getConfiguration("puristic");
     const envGlob = config.get<string>("envFileGlob") ?? "**/.env*";
-    const configGlob = config.get<string>("configFileGlob") ?? "**/confederation.config.{ts,mts,cts,js,mjs,cjs}";
+    const configGlob = config.get<string>("configFileGlob") ?? "**/env.config.{ts,mts,cts,js,mjs,cjs}";
     const exclude = excludePattern(config.get<string[]>("exclude") ?? []);
 
     const [envUris, configUris] = await Promise.all([

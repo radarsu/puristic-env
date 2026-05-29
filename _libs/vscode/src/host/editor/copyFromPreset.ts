@@ -1,4 +1,4 @@
-import { baseName, dirOf, listEntries, parseEnv } from "@confederation/core/index.js";
+import { baseName, dirOf, listEntries, parseEnv } from "@puristic/env/index.js";
 import * as vscode from "vscode";
 import { scanWorkspace } from "../discovery/scan.js";
 import { setEnvValues } from "./documentWrites.js";

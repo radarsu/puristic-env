@@ -1,9 +1,9 @@
-# confederation
+# puristic
 
 A VSCode extension that turns `.env` files into a managed, validated UI driven by your
-[`@confederation/core`](../core) configuration schema.
+[`@puristic/env`](../core) configuration schema.
 
-When a workspace uses confederation, opening any `.env` file replaces the raw text editor with a
+When a workspace uses puristic, opening any `.env` file replaces the raw text editor with a
 management panel: a **sidebar** of every directory that contains `.env` files (with aggregate
 status badges), a **key-value grid** grouped by your nested schema, and a cross-service
 **overview matrix**. Missing, invalid, unknown, and secret variables are signalled inline, with
@@ -11,17 +11,17 @@ full read/write editing and one-click secret encryption.
 
 ## How it knows your variables
 
-The extension never guesses. It evaluates a **convention file** — `confederation.config.ts`
+The extension never guesses. It evaluates a **convention file** — `env.config.ts`
 (`.mts`/`.cts`/`.js`/`.mjs`/`.cjs`) at a service/package root — in a short-lived Node 24
-subprocess and asks `@confederation/core` (`inspectSchema` / `validateValues`) for the exact set
+subprocess and asks `@puristic/env` (`inspectSchema` / `validateValues`) for the exact set
 of expected variables, their types, defaults, secret flags, and live validation.
 
 The config file must export the **raw `ConfigDefinition`** (schema + sources) — not
 `defineConfig(...)`, which loads immediately and would fail on encrypted secrets:
 
 ```ts
-// confederation.config.ts
-import type { ConfigDefinition } from "@confederation/core/index.js";
+// env.config.ts
+import type { ConfigDefinition } from "@puristic/env/index.js";
 import { z } from "zod";
 
 export default {
@@ -35,7 +35,7 @@ export default {
 ```
 
 A `default`, `config`, `definition`, or bare `schema` export is accepted. Each `.env` directory is
-associated with its **nearest ancestor** `confederation.config.*`.
+associated with its **nearest ancestor** `env.config.*`.
 
 Schema path → env var follows core's rule: `["server","httpsPort"]` → `SERVER_HTTPS_PORT`.
 
@@ -58,17 +58,17 @@ native and nothing is written to disk until you save. The round-trip `.env` writ
 comments, blank lines, key order, quoting, and `export` prefixes.
 
 Editing a secret-marked key encrypts the value with the project's public key
-(`.config/confederation-pub.key`, resolved by walking up to the nearest `package.json`, mirroring
-core). If no key exists, run `confederation keygen`. Encryption needs only the public key; the
+(`.config/puristic-pub.key`, resolved by walking up to the nearest `package.json`, mirroring
+core). If no key exists, run `puristic keygen`. Encryption needs only the public key; the
 private key is never required to write. Revealing an encrypted value decrypts in the extension
 host (never the webview) and requires a configured private key.
 
 ## Build & develop
 
 ```sh
-pnpm --filter @confederation/core build      # the extension bundles core's dist
-pnpm --filter confederation build    # esbuild -> dist/, then tsc typecheck
-pnpm --filter confederation test     # vitest (pure logic + subprocess integration)
+pnpm --filter @puristic/env build      # the extension bundles core's dist
+pnpm --filter env build    # esbuild -> dist/, then tsc typecheck
+pnpm --filter env test     # vitest (pure logic + subprocess integration)
 ```
 
 Press <kbd>F5</kbd> with `_libs/vscode` open (configuration **Run Env Manager (fixtures)**) to
@@ -78,15 +78,15 @@ launch an Extension Development Host on `fixtures/`, then open `fixtures/api/.en
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
-| `confederation.nodePath` | `node` | Node 24+ binary used to evaluate config files (must support TS type-stripping — **not** the editor's Electron node) |
-| `confederation.configFileGlob` | `**/confederation.config.{ts,mts,cts,js,mjs,cjs}` | config discovery |
-| `confederation.envFileGlob` | `**/.env*` | `.env` discovery |
-| `confederation.exclude` | node_modules/dist/.cache/.turbo/.git | discovery excludes |
-| `confederation.configHostTimeoutMs` | `10000` | per-request subprocess timeout |
+| `puristic.nodePath` | `node` | Node 24+ binary used to evaluate config files (must support TS type-stripping — **not** the editor's Electron node) |
+| `puristic.configFileGlob` | `**/env.config.{ts,mts,cts,js,mjs,cjs}` | config discovery |
+| `puristic.envFileGlob` | `**/.env*` | `.env` discovery |
+| `puristic.exclude` | node_modules/dist/.cache/.turbo/.git | discovery excludes |
+| `puristic.configHostTimeoutMs` | `10000` | per-request subprocess timeout |
 
 ## Architecture
 
-- **Pure logic** (`src/host/{detectConfederation,discovery,editor/envText,model}`) — no `vscode`
+- **Pure logic** (`src/host/{detectPuristic,discovery,editor/envText,model}`) — no `vscode`
   import, unit-tested with vitest.
 - **Config-host subprocess** (`src/host/configHost`) — forked Node 24 over IPC; user code runs
   only here, never the extension host.

@@ -1,6 +1,6 @@
 import type { LeafDescriptorPublic } from "./inspectSchema.js";
 
-// The per-variable status vocabulary shared by the CLI (`confederation validate`) and the VSCode
+// The per-variable status vocabulary shared by the CLI (`puristic validate`) and the VSCode
 // editor — one source of truth so both classify a value identically.
 export type VarStatus = "ok" | "missing-required" | "using-default" | "invalid" | "unknown" | "secret-encrypted" | "secret-plaintext" | "no-schema";
 

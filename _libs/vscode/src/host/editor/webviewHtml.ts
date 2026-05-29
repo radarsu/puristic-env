@@ -19,7 +19,7 @@ export function renderWebviewHtml(webview: vscode.Webview, distRoot: vscode.Uri)
     <meta http-equiv="Content-Security-Policy" content="${csp}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="${styleUri}" rel="stylesheet">
-    <title>Confederation Env Manager</title>
+    <title>Puristic Env Manager</title>
 </head>
 <body>
     <div id="app"></div>

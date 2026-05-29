@@ -20,6 +20,6 @@ export const encryptCommand = buildCommand<{}, [string]>({
     docs: {
         brief: "Encrypt a value with the project public key",
         fullDescription:
-            "Reads .config/confederation-pub.key, encrypts the provided plaintext with ML-KEM-512 + AES-256-GCM, and prints the resulting `encrypted:v1:...` envelope. Paste the output into a .env file as the secret value.",
+            "Reads .config/puristic-pub.key, encrypts the provided plaintext with ML-KEM-512 + AES-256-GCM, and prints the resulting `encrypted:v1:...` envelope. Paste the output into a .env file as the secret value.",
     },
 });

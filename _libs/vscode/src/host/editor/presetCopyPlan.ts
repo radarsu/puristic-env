@@ -1,4 +1,4 @@
-import { isEnvelope } from "@confederation/core/index.js";
+import { isEnvelope } from "@puristic/env/index.js";
 
 export type PresetChange = "add" | "override" | "unchanged";
 

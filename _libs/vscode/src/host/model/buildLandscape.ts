@@ -1,4 +1,4 @@
-import { baseName, classify, isEnvelope, type LeafDescriptorPublic, type ValidationReport, type VarStatus } from "@confederation/core/index.js";
+import { baseName, classify, isEnvelope, type LeafDescriptorPublic, type ValidationReport, type VarStatus } from "@puristic/env/index.js";
 import { FORMAT_META } from "../../shared/formats.js";
 import type { BadgeStatus, ControlType, DirView, FileView, Landscape, MatrixColumn, MatrixRow, MatrixSection, VarRow } from "../../shared/protocol.js";
 

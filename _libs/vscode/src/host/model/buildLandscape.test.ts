@@ -1,4 +1,4 @@
-import { inspectSchema, validateValues } from "@confederation/core/index.js";
+import { inspectSchema, validateValues } from "@puristic/env/index.js";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import type { FileView, VarRow } from "../../shared/protocol.js";
@@ -19,7 +19,7 @@ function file(fileId: string, values: Record<string, string>, overrides: Partial
         dirId: fileId.slice(0, fileId.lastIndexOf("/")),
         dirty: false,
         entries: Object.entries(values).map(([key, value]) => ({ key, value })),
-        configId: "apps/api/confederation.config.ts",
+        configId: "apps/api/env.config.ts",
         descriptors,
         validation: validateValues(schema, values),
         ...overrides,
@@ -90,7 +90,7 @@ describe("buildLandscape", () => {
             dirId: "apps/web",
             dirty: false,
             entries: [],
-            configId: "apps/web/confederation.config.ts",
+            configId: "apps/web/env.config.ts",
             descriptors: inspectSchema(otherSchema),
             validation: validateValues(otherSchema, {}),
         };
@@ -98,7 +98,7 @@ describe("buildLandscape", () => {
         expect(landscape.columns.map((column) => column.fileId)).toEqual(["apps/api/.env", "apps/web/.env"]);
         expect(landscape.matrix).toHaveLength(2);
 
-        const apiSection = landscape.matrix.find((section) => section.service === "apps/api/confederation.config.ts")!;
+        const apiSection = landscape.matrix.find((section) => section.service === "apps/api/env.config.ts")!;
         const nodeEnvRow = apiSection.rows.find((entry) => entry.envName === "NODE_ENV")!;
         expect(nodeEnvRow.cells["apps/api/.env"]).toBe("ok");
         expect(nodeEnvRow.cells["apps/web/.env"]).toBe("n/a");
@@ -119,7 +119,7 @@ describe("buildLandscape", () => {
             dirId: "svc",
             dirty: false,
             entries: [],
-            configId: "svc/confederation.config.ts",
+            configId: "svc/env.config.ts",
             descriptors: inspectSchema(controlSchema),
             validation: validateValues(controlSchema, {}),
         };

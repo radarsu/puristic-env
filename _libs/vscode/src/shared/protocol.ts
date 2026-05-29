@@ -1,7 +1,7 @@
 // The shapes exchanged between the extension host and the webview. Both sides import from here.
-// VarStatus (the per-variable status vocabulary) is owned by @confederation/core and reused here.
+// VarStatus (the per-variable status vocabulary) is owned by @puristic/env and reused here.
 
-import type { VarStatus } from "@confederation/core/index.js";
+import type { VarStatus } from "@puristic/env/index.js";
 
 export type BadgeStatus = "ok" | "warn" | "error" | "none";
 

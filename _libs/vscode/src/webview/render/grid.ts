@@ -1,4 +1,4 @@
-import type { VarStatus } from "@confederation/core/index.js";
+import type { VarStatus } from "@puristic/env/index.js";
 import { FORMAT_META, toInputValue } from "../../shared/formats.js";
 import type { FileView, VarRow } from "../../shared/protocol.js";
 import { h } from "../dom.js";
@@ -16,7 +16,7 @@ export function renderGrid(state: AppState, file: FileView): HTMLElement {
         const note =
             file.configError !== undefined
                 ? `Config failed to load: ${file.configError}`
-                : "No confederation.config governs this directory — editing as plain key/value.";
+                : "No env.config governs this directory — editing as plain key/value.";
         container.append(h("div", { class: `notice ${file.configError !== undefined ? "notice-error" : "notice-info"}`, text: note }));
     }
 

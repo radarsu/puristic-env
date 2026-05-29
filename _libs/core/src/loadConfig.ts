@@ -2,7 +2,7 @@ import { pathToFileURL } from "node:url";
 import type { z } from "zod";
 import type { ConfigDefinition } from "./createConfig.js";
 
-// Extract a ConfigDefinition from an imported confederation.config.* module via the export
+// Extract a ConfigDefinition from an imported env.config.* module via the export
 // convention: a `default`/`config`/`definition` export carrying a `schema`, or a bare `schema`
 // export. The extension's config-host and the CLI both rely on this single implementation.
 export function extractDefinition(module: Record<string, unknown>): ConfigDefinition<z.ZodType> {
@@ -18,11 +18,11 @@ export function extractDefinition(module: Record<string, unknown>): ConfigDefini
         return { schema: bare, sources: [] };
     }
     throw new Error(
-        "confederation.config must export a ConfigDefinition (default, `config`, or `definition`) with a `schema`, or a bare zod `schema` export.",
+        "env.config must export a ConfigDefinition (default, `config`, or `definition`) with a `schema`, or a bare zod `schema` export.",
     );
 }
 
-// Evaluate the user's confederation.config.* in-process via Node 24 native TS type-stripping and
+// Evaluate the user's env.config.* in-process via Node 24 native TS type-stripping and
 // extract its definition. The CLI uses this directly (it runs on Node 24); errors propagate.
 export async function loadDefinition(configPath: string): Promise<ConfigDefinition<z.ZodType>> {
     const module = (await import(pathToFileURL(configPath).href)) as Record<string, unknown>;

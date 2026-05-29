@@ -1,11 +1,11 @@
 {
-    "name": "@confederation/root",
+    "name": "@puristic/root",
     "version": "0.0.0",
     "private": true,
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/radarsu/confederation.git"
+        "url": "git+https://github.com/radarsu/puristic-env.git"
     },
     "scripts": {
         "build": "turbo run build",

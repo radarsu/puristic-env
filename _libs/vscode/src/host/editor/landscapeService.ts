@@ -1,5 +1,5 @@
 import { dirname } from "node:path";
-import { associateConfigs, baseName, dirOf, type LeafDescriptorPublic, listEntries, parseEnv } from "@confederation/core/index.js";
+import { associateConfigs, baseName, dirOf, type LeafDescriptorPublic, listEntries, parseEnv } from "@puristic/env/index.js";
 import * as vscode from "vscode";
 import type { Landscape } from "../../shared/protocol.js";
 import type { ConfigHostManager } from "../configHost/manager.js";

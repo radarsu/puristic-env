@@ -1,4 +1,4 @@
-import type { VarStatus } from "@confederation/core/index.js";
+import type { VarStatus } from "@puristic/env/index.js";
 import type { ValidateFileResult, ValidateResult, ValidateRow } from "./validate.js";
 
 const STATUS_LABEL: Record<VarStatus, string> = {
@@ -26,7 +26,7 @@ export function renderHuman(result: ValidateResult): string {
         if (file.configError !== undefined) {
             lines.push(`  config error: ${file.configError}`);
         } else if (file.configPath === undefined) {
-            lines.push("  (no governing confederation.config.* — skipped)");
+            lines.push("  (no governing env.config.* — skipped)");
         } else {
             for (const row of file.rows) {
                 lines.push(renderRow(row));

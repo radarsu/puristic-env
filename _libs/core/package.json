@@ -1,5 +1,5 @@
 {
-    "name": "@confederation/core",
+    "name": "@puristic/env",
     "version": "0.0.0",
     "license": "MIT",
     "type": "module",
@@ -19,11 +19,11 @@
         "./index.js": {
             "types": "./dist/index.d.ts",
             "import": {
-                "@confederation/src": "./src/index.ts",
+                "@puristic/src": "./src/index.ts",
                 "default": "./dist/index.js"
             },
             "require": {
-                "@confederation/src": "./src/index.ts",
+                "@puristic/src": "./src/index.ts",
                 "default": "./dist/index.js"
             }
         }
@@ -40,7 +40,7 @@
         "zod": "catalog:"
     },
     "devDependencies": {
-        "@confederation/tsconfig": "workspace:*",
+        "@puristic/tsconfig": "workspace:*",
         "type-fest": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:"
