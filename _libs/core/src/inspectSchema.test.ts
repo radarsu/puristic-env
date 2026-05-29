@@ -39,6 +39,17 @@ describe("inspectSchema", () => {
         expect(byEnv(descriptors, "NAME").constraints.map((c) => c.label)).toEqual(["min length 3"]);
     });
 
+    it("surfaces the compiled regex on string-format constraints", () => {
+        const descriptors = inspectSchema(z.object({ address: z.ipv4(), id: z.uuid() }));
+        const address = byEnv(descriptors, "ADDRESS");
+        expect(address.type).toBe("string");
+        const format = address.constraints.find((c) => c.kind === "format");
+        expect(format?.value).toBe("ipv4");
+        expect(format?.regex?.source).toBeTruthy();
+        expect(new RegExp(format!.regex!.source).test("192.168.1.1")).toBe(true);
+        expect(new RegExp(format!.regex!.source).test("not-an-ip")).toBe(false);
+    });
+
     it("classifies required, optional, default, and nullable", () => {
         const descriptors = inspectSchema(
             z.object({

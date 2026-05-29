@@ -5,7 +5,7 @@ import type { VarStatus } from "@confederation/core/index.js";
 
 export type BadgeStatus = "ok" | "warn" | "error" | "none";
 
-export type ControlType = "text" | "number" | "url" | "email" | "boolean";
+export type ControlType = "text" | "number" | "boolean";
 
 export interface VarRow {
     envName: string;
@@ -14,6 +14,8 @@ export interface VarRow {
     group: string;
     typeLabel: string;
     control: ControlType;
+    format?: string;
+    pattern?: string;
     min?: number;
     max?: number;
     step?: number;
@@ -91,6 +93,7 @@ export type WebviewToHost =
     | { type: "setValue"; fileId: string; envName: string; value: string }
     | { type: "addKey"; fileId: string; envName: string; value: string }
     | { type: "addAllMissing"; fileId: string }
+    | { type: "copyFromPreset"; fileId: string }
     | { type: "removeKey"; fileId: string; envName: string }
     | { type: "resetToDefault"; fileId: string; envName: string }
     | { type: "encryptSecret"; fileId: string; envName: string; plaintext: string }

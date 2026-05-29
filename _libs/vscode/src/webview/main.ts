@@ -1,4 +1,5 @@
 import "./styles.css";
+import { fromInputValue } from "../shared/formats.js";
 import type { HostToWebview } from "../shared/protocol.js";
 import { send, vscode } from "./api.js";
 import { clear, h } from "./dom.js";
@@ -133,6 +134,11 @@ function onClick(event: MouseEvent): void {
                 send({ type: "encryptAllSecrets", fileId: file });
             }
             return;
+        case "copy-preset":
+            if (file !== undefined) {
+                send({ type: "copyFromPreset", fileId: file });
+            }
+            return;
         case "save":
             if (file !== undefined) {
                 send({ type: "saveFile", fileId: file });
@@ -169,7 +175,9 @@ function onChange(event: Event): void {
         return;
     }
     if (action === "set") {
-        send({ type: "setValue", fileId: file, envName: env, value: target.value });
+        const format = target.dataset["format"];
+        const value = format !== undefined ? fromInputValue(format, target.value) : target.value;
+        send({ type: "setValue", fileId: file, envName: env, value });
     } else if (action === "encrypt-set" && target.value !== "") {
         send({ type: "encryptSecret", fileId: file, envName: env, plaintext: target.value });
     }

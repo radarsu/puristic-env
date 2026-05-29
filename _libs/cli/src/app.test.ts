@@ -97,6 +97,7 @@ describe("app", () => {
         expect(combined).toContain("keygen");
         expect(combined).toContain("encrypt");
         expect(combined).toContain("validate");
+        expect(combined).toContain("run");
     });
 
     it("validate exits cleanly when there is nothing to validate", async () => {
@@ -105,5 +106,20 @@ describe("app", () => {
         await run(app, ["validate"], { process: fake });
         expect(fake.stdoutText).toContain("No .env files found.");
         expect(fake.exitCode ?? 0).toBe(0);
+    });
+
+    it("run with no command (and no --print) sets a non-zero exit code", async () => {
+        const fake = fakeProcess();
+        const { run } = await import("@stricli/core");
+        await run(app, ["run"], { process: fake });
+        expect(fake.stderrText).toContain("No command to run");
+        expect(fake.exitCode).toBe(1);
+    });
+
+    it("run passes the command after -- through verbatim and forwards its exit code", async () => {
+        const fake = fakeProcess();
+        const { run } = await import("@stricli/core");
+        await run(app, ["run", "--", process.execPath, "-e", "process.exit(3)"], { process: fake });
+        expect(fake.exitCode).toBe(3);
     });
 });

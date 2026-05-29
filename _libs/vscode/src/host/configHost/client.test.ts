@@ -26,10 +26,22 @@ describe("ConfigHostClient", () => {
         client = makeClient();
         const descriptors = await client.introspect();
         const byEnv = new Map(descriptors.map((descriptor) => [descriptor.envName, descriptor]));
-        expect([...byEnv.keys()].sort()).toEqual(["DATABASE_URL", "NODE_ENV", "SERVER_HOST", "SERVER_PORT"]);
+        expect([...byEnv.keys()].sort()).toEqual([
+            "API_KEY",
+            "DATABASE_URL",
+            "NODE_ENV",
+            "REQUEST_ID",
+            "SERVER_HOST",
+            "SERVER_PORT",
+            "STARTED_AT",
+            "SUPPORT_PHONE",
+        ]);
         expect(byEnv.get("SERVER_PORT")?.type).toBe("number");
         expect(byEnv.get("SERVER_HOST")?.hasDefault).toBe(true);
         expect(byEnv.get("DATABASE_URL")?.secret).toBe(true);
+        const requestId = byEnv.get("REQUEST_ID");
+        expect(requestId?.type).toBe("string");
+        expect(requestId?.constraints.find((constraint) => constraint.kind === "format")?.regex?.source).toBeTruthy();
     });
 
     it("validates values against the fixture schema", async () => {

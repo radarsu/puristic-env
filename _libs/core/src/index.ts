@@ -32,6 +32,7 @@ export {
     serializeEnv,
     setValue,
 } from "./envText.js";
+export { expandEnv, expandValue } from "./expandEnv.js";
 export { inspectSchema, type LeafConstraint, type LeafDescriptorPublic, type LeafTypeTag } from "./inspectSchema.js";
 export { extractDefinition, loadDefinition } from "./loadConfig.js";
 export type { Source, SourceContext } from "./source.js";

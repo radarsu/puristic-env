@@ -7,9 +7,13 @@ import { z } from "zod";
 export default {
     schema: z.object({
         nodeEnv: z.string(),
+        requestId: z.uuid().optional(),
+        startedAt: z.iso.datetime().optional(),
+        supportPhone: z.e164().optional(),
+        apiKey: z.base64().optional(),
         server: z.object({
             port: z.coerce.number().int(),
-            host: z.string().default("0.0.0.0"),
+            host: z.ipv4().default("0.0.0.0"),
         }),
         database: z.object({
             url: z.url().meta({ secret: true }),

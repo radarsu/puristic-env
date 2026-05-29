@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import type { HostToWebview, WebviewToHost } from "../../shared/protocol.js";
 import type { ConfigHostManager } from "../configHost/manager.js";
 import { decryptValue, encryptForProject } from "../secrets.js";
+import { copyFromPreset } from "./copyFromPreset.js";
 import { addEnvKey, removeEnvKey, saveDocument, setEnvValue } from "./documentWrites.js";
 import { encryptAllSecrets } from "./encryptAllSecrets.js";
 import { LandscapeService } from "./landscapeService.js";
@@ -113,6 +114,9 @@ export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
                     return;
                 case "addAllMissing":
                     await this.addAllMissing(folder, activeFileId, message.fileId);
+                    return;
+                case "copyFromPreset":
+                    await copyFromPreset(folder, message.fileId);
                     return;
                 case "encryptAllSecrets":
                     await encryptAllSecrets(this.landscape, folder, message.fileId);

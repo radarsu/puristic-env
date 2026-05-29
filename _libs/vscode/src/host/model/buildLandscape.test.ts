@@ -108,6 +108,7 @@ describe("buildLandscape", () => {
         const controlSchema = z.object({
             port: z.coerce.number().int().min(1).max(65535),
             endpoint: z.url(),
+            address: z.ipv4(),
             flag: z.coerce.boolean(),
             mode: z.enum(["dev", "prod"]),
             name: z.string(),
@@ -129,7 +130,17 @@ describe("buildLandscape", () => {
         expect(port.step).toBe(1);
         expect(port.min).toBe(1);
         expect(port.max).toBe(65535);
-        expect(row(view, "ENDPOINT").control).toBe("url");
+
+        const endpoint = row(view, "ENDPOINT");
+        expect(endpoint.control).toBe("text");
+        expect(endpoint.format).toBe("url");
+
+        const address = row(view, "ADDRESS");
+        expect(address.control).toBe("text");
+        expect(address.format).toBe("ipv4");
+        expect(address.pattern).toBeTruthy();
+        expect(address.typeLabel).toBe("string (IPv4)");
+
         expect(row(view, "FLAG").control).toBe("boolean");
         expect(row(view, "MODE").enumValues).toEqual(["dev", "prod"]);
         expect(row(view, "NAME").control).toBe("text");

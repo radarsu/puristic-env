@@ -1,4 +1,5 @@
 import type { VarStatus } from "@confederation/core/index.js";
+import { FORMAT_META, toInputValue } from "../../shared/formats.js";
 import type { FileView, VarRow } from "../../shared/protocol.js";
 import { h } from "../dom.js";
 import { icon } from "../icons.js";
@@ -67,6 +68,18 @@ function renderGridHeader(file: FileView): HTMLElement {
         h("button", { class: "btn", "data-action": "add-all", "data-file": file.fileId, title: "Add every missing/defaulted key to this file" }, [
             "Add all missing",
         ]),
+        file.fileName === ".env" || file.fileName === ".env.local"
+            ? h(
+                  "button",
+                  {
+                      class: "btn",
+                      "data-action": "copy-preset",
+                      "data-file": file.fileId,
+                      title: "Merge keys from a sibling .env.<preset> file into this file",
+                  },
+                  ["Copy from preset…"],
+              )
+            : undefined,
         file.rows.some((row) => row.status === "secret-plaintext")
             ? h(
                   "button",
@@ -119,14 +132,25 @@ function renderControl(state: AppState, fileId: string, row: VarRow): HTMLElemen
     if (row.control === "boolean") {
         return renderSelect(fileId, row, ["true", "false"]);
     }
+    const meta = row.format !== undefined ? FORMAT_META[row.format] : undefined;
+    const type = meta?.inputType ?? (row.control === "number" ? "number" : "text");
+    const isPicker = type === "date" || type === "time" || type === "datetime-local";
+    // Native pickers can't hold a timezone; show the picker-friendly value and convert back on change.
+    const value = isPicker && row.format !== undefined ? toInputValue(row.format, row.rawValue ?? "") : (row.rawValue ?? "");
+    // The compiled zod regex drives the :invalid red border (text-like inputs only); pickers self-validate.
+    const pattern = !isPicker && type !== "number" ? row.pattern : undefined;
     return h("input", {
         class: "value-input",
-        type: row.control,
+        type,
         "data-action": "set",
         "data-file": fileId,
         "data-env": row.envName,
-        value: row.rawValue ?? "",
-        placeholder: row.defaultValue ?? "",
+        "data-format": row.format,
+        value,
+        placeholder: row.defaultValue ?? meta?.example ?? "",
+        title: meta !== undefined ? `Expected ${meta.label} — e.g. ${meta.example}` : undefined,
+        inputmode: meta?.inputMode,
+        pattern,
         spellcheck: "false",
         min: row.min !== undefined ? String(row.min) : undefined,
         max: row.max !== undefined ? String(row.max) : undefined,

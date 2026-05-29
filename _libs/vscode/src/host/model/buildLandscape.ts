@@ -1,15 +1,6 @@
 import { baseName, classify, isEnvelope, type LeafDescriptorPublic, type ValidationReport, type VarStatus } from "@confederation/core/index.js";
-import type {
-    BadgeStatus,
-    ControlType,
-    DirView,
-    FileView,
-    Landscape,
-    MatrixColumn,
-    MatrixRow,
-    MatrixSection,
-    VarRow,
-} from "../../shared/protocol.js";
+import { FORMAT_META } from "../../shared/formats.js";
+import type { BadgeStatus, ControlType, DirView, FileView, Landscape, MatrixColumn, MatrixRow, MatrixSection, VarRow } from "../../shared/protocol.js";
 
 export interface FileInput {
     fileId: string;
@@ -150,6 +141,12 @@ function buildVarRow(
         isEncrypted,
         status,
     };
+    if (hint.format !== undefined) {
+        row.format = hint.format;
+    }
+    if (hint.pattern !== undefined) {
+        row.pattern = hint.pattern;
+    }
     if (hint.min !== undefined) {
         row.min = hint.min;
     }
@@ -206,11 +203,16 @@ function typeLabel(descriptor: LeafDescriptorPublic): string {
     if (descriptor.constraints.length === 0) {
         return descriptor.type;
     }
-    return `${descriptor.type} (${descriptor.constraints.map((constraint) => constraint.label).join(", ")})`;
+    const labels = descriptor.constraints.map((constraint) =>
+        constraint.kind === "format" && typeof constraint.value === "string" ? (FORMAT_META[constraint.value]?.label ?? constraint.label) : constraint.label,
+    );
+    return `${descriptor.type} (${labels.join(", ")})`;
 }
 
 interface ControlHint {
     control: ControlType;
+    format?: string;
+    pattern?: string;
     min?: number;
     max?: number;
     step?: number;
@@ -238,10 +240,11 @@ function deriveControl(descriptor: LeafDescriptorPublic): ControlHint {
     if (descriptor.type === "string") {
         const hint: ControlHint = { control: "text" };
         for (const constraint of descriptor.constraints) {
-            if (constraint.kind === "format" && constraint.value === "url") {
-                hint.control = "url";
-            } else if (constraint.kind === "format" && constraint.value === "email") {
-                hint.control = "email";
+            if (constraint.kind === "format" && typeof constraint.value === "string") {
+                hint.format = constraint.value;
+                if (constraint.regex !== undefined) {
+                    hint.pattern = constraint.regex.source;
+                }
             } else if (constraint.kind === "minLength" && typeof constraint.value === "number") {
                 hint.minLength = constraint.value;
             } else if (constraint.kind === "maxLength" && typeof constraint.value === "number") {
