@@ -5,7 +5,7 @@
     "type": "module",
     "displayName": "Puristic Env Manager",
     "description": "Manage .env files against env.config schemas with validation, encryption, and a cross-service overview.",
-    "publisher": "puristic",
+    "publisher": "radarsu",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/radarsu/confederation.git",
