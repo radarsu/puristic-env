@@ -5,7 +5,7 @@
     "type": "module",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/radarsu/confederation.git",
+        "url": "git+https://github.com/radarsu/puristic-env.git",
         "directory": "_libs/cli"
     },
     "files": [

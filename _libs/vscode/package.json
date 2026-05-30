@@ -9,7 +9,7 @@
     "icon": "icon.png",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/radarsu/confederation.git",
+        "url": "git+https://github.com/radarsu/puristic-env.git",
         "directory": "_libs/vscode"
     },
     "main": "./dist/extension.cjs",
