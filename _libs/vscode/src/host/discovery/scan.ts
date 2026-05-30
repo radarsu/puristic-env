@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type { PackageManifest } from "../detectPuristic.js";
+import { filterGitignored } from "./gitignore.js";
 
 export interface WorkspaceScan {
     folder: vscode.WorkspaceFolder;
@@ -15,8 +16,8 @@ export async function scanWorkspace(folder: vscode.WorkspaceFolder): Promise<Wor
     const exclude = excludePattern(config.get<string[]>("exclude") ?? []);
 
     const [envUris, configUris] = await Promise.all([
-        vscode.workspace.findFiles(new vscode.RelativePattern(folder, envGlob), exclude),
-        vscode.workspace.findFiles(new vscode.RelativePattern(folder, configGlob), exclude),
+        vscode.workspace.findFiles(new vscode.RelativePattern(folder, envGlob), exclude).then((uris) => filterGitignored(folder, uris)),
+        vscode.workspace.findFiles(new vscode.RelativePattern(folder, configGlob), exclude).then((uris) => filterGitignored(folder, uris)),
     ]);
 
     const envFileIds = envUris.map((uri) => relativeId(folder, uri)).sort();
@@ -35,7 +36,8 @@ function relativeId(folder: vscode.WorkspaceFolder, uri: vscode.Uri): string {
 }
 
 async function readManifests(folder: vscode.WorkspaceFolder, exclude: vscode.GlobPattern): Promise<PackageManifest[]> {
-    const uris = await vscode.workspace.findFiles(new vscode.RelativePattern(folder, "**/package.json"), exclude);
+    const found = await vscode.workspace.findFiles(new vscode.RelativePattern(folder, "**/package.json"), exclude);
+    const uris = await filterGitignored(folder, found);
     const manifests = await Promise.all(uris.map((uri) => readManifest(uri)));
     return manifests.filter((manifest): manifest is PackageManifest => manifest !== undefined);
 }

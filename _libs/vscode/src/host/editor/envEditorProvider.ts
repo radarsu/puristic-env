@@ -3,6 +3,7 @@ import { getValue, isEnvelope, parseEnv } from "@puristic/env/index.js";
 import * as vscode from "vscode";
 import type { HostToWebview, WebviewToHost } from "../../shared/protocol.js";
 import type { ConfigHostManager } from "../configHost/manager.js";
+import { filterGitignored } from "../discovery/gitignore.js";
 import { decryptValue, encryptForProject } from "../secrets.js";
 import { copyFromPreset } from "./copyFromPreset.js";
 import { addEnvKey, removeEnvKey, saveDocument, setEnvValue } from "./documentWrites.js";
@@ -62,7 +63,10 @@ export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
         );
 
         const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, "**/{.env*,env.config.*}"));
-        const onFsEvent = (uri: vscode.Uri): void => {
+        const onFsEvent = async (uri: vscode.Uri): Promise<void> => {
+            if ((await filterGitignored(folder, [uri])).length === 0) {
+                return;
+            }
             if (uri.path.includes("env.config.")) {
                 this.manager.restart(uri.fsPath);
             }
