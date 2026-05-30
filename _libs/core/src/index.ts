@@ -16,7 +16,6 @@ export {
     resolveProjectName,
     resolvePublicKey,
 } from "./crypto/resolveKey.js";
-export { defineConfig } from "./defineConfig.js";
 export { associateConfigs } from "./discovery/associate.js";
 export { groupByDirectory } from "./discovery/groupByDirectory.js";
 export { baseName, dirOf, isAncestorOrSame } from "./discovery/paths.js";
@@ -34,7 +33,7 @@ export {
 } from "./envText.js";
 export { expandEnv, expandValue } from "./expandEnv.js";
 export { inspectSchema, type LeafConstraint, type LeafDescriptorPublic, type LeafTypeTag } from "./inspectSchema.js";
-export { extractDefinition, loadDefinition } from "./loadConfig.js";
+export { extractDefinition, loadConfig, loadDefinition } from "./loadConfig.js";
 export type { Source, SourceContext } from "./source.js";
 export { type CliArgsOptions, cliArgs } from "./sources/cliArgs.js";
 export { type EnvOptions, env } from "./sources/env.js";

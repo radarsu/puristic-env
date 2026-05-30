@@ -1,6 +1,23 @@
 import { pathToFileURL } from "node:url";
 import type { z } from "zod";
-import type { ConfigDefinition } from "./createConfig.js";
+import { type ConfigDefinition, createConfig } from "./createConfig.js";
+
+/**
+ * Load, validate, and return the values of a `ConfigDefinition` in one call —
+ * `createConfig(definition).load()` without keeping the handle. The result is
+ * deep-frozen. Secret leaves marked with `.meta({ secret: true })` are
+ * auto-decrypted when their value is an `encrypted:v1:` envelope and a private
+ * key is resolvable.
+ *
+ * The schema must be a plain `z.object(...)` (with `.prefault({})` on nested
+ * objects, and `z.coerce.number()` / `z.stringbool()` on numeric/boolean leaves)
+ * — schema introspection cannot see through `z.pipe`/`z.transform`. Keep anything
+ * that does I/O (e.g. reading TLS cert files) out of the schema and do it at the
+ * point of use.
+ */
+export function loadConfig<S extends z.ZodType>(definition: ConfigDefinition<S>): z.infer<S> {
+    return createConfig(definition).load();
+}
 
 // Extract a ConfigDefinition from an imported env.config.* module via the export
 // convention: a `default`/`config`/`definition` export carrying a `schema`, or a bare `schema`

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { defineConfig } from "./defineConfig.js";
+import { loadConfig } from "./loadConfig.js";
 
-describe("defineConfig", () => {
+describe("loadConfig", () => {
     it("returns the loaded value directly", () => {
-        const config = defineConfig({
+        const config = loadConfig({
             schema: z.object({ port: z.coerce.number().default(3000) }),
             sources: [{ name: "override", load: () => ({ port: "8080" }) }],
         });
@@ -14,7 +14,7 @@ describe("defineConfig", () => {
 
     it("throws on invalid input", () => {
         expect(() =>
-            defineConfig({
+            loadConfig({
                 schema: z.object({ port: z.coerce.number().int().min(1) }),
                 sources: [{ name: "bad", load: () => ({ port: "abc" }) }],
             }),
