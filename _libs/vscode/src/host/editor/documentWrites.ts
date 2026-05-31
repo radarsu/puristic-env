@@ -44,3 +44,10 @@ export async function saveDocument(uri: vscode.Uri): Promise<void> {
         await document.save();
     }
 }
+
+// Throw away unsaved edits by writing the on-disk (saved) content back into the buffer — which clears dirty
+// since the buffer then matches the saved version. Goes through writeText (WorkspaceEdit) so it's undoable.
+export async function revertToSaved(uri: vscode.Uri): Promise<void> {
+    const onDisk = await vscode.workspace.fs.readFile(uri);
+    await writeText(uri, new TextDecoder().decode(onDisk));
+}

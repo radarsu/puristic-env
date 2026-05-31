@@ -7,6 +7,7 @@ export interface FileInput {
     fileName: string;
     dirId: string;
     dirty: boolean;
+    text: string;
     entries: { key: string; value: string }[];
     configId?: string;
     descriptors?: LeafDescriptorPublic[];
@@ -39,6 +40,8 @@ export function buildLandscape(input: LandscapeInput): Landscape {
         dirs: buildDirs(input.files, files),
         matrix: buildMatrix(input.files, columns, statusByFile),
         activeFileId: input.activeFileId,
+        // The host fills this in (attachDecryptedSecrets); the pure model assumes no key.
+        privateKeyAvailable: false,
     };
 }
 
@@ -56,6 +59,7 @@ function buildFileView(file: FileInput): FileView {
             fileName: file.fileName,
             dirId: file.dirId,
             dirty: file.dirty,
+            text: file.text,
             hasSchema: false,
             rows,
             missingRequired: 0,
@@ -109,6 +113,7 @@ function buildFileView(file: FileInput): FileView {
         fileName: file.fileName,
         dirId: file.dirId,
         dirty: file.dirty,
+        text: file.text,
         hasSchema: true,
         rows,
         missingRequired,

@@ -1,16 +1,15 @@
 import { dirname } from "node:path";
-import { getValue, isEnvelope, parseEnv } from "@puristic/env/index.js";
 import * as vscode from "vscode";
 import type { HostToWebview, WebviewToHost } from "../../shared/protocol.js";
 import type { ConfigHostManager } from "../configHost/manager.js";
 import { filterGitignored } from "../discovery/gitignore.js";
-import { decryptValue, encryptForProject } from "../secrets.js";
+import { encryptForProject } from "../secrets.js";
 import { copyFromPreset } from "./copyFromPreset.js";
-import { addEnvKey, removeEnvKey, saveDocument, setEnvValue, writeText } from "./documentWrites.js";
-import { EditHistory } from "./editHistory.js";
+import { addEnvKey, removeEnvKey, revertToSaved, saveDocument, setEnvValue, writeText } from "./documentWrites.js";
+import { EditHistory, type Snapshot } from "./editHistory.js";
 import { encryptAllSecrets } from "./encryptAllSecrets.js";
 import { LandscapeService } from "./landscapeService.js";
-import { isEnvUri, readText, relativeId, toUri } from "./uris.js";
+import { isEnvUri, relativeId, toUri } from "./uris.js";
 import { renderWebviewHtml } from "./webviewHtml.js";
 
 export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
@@ -125,22 +124,25 @@ export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
                 case "copyFromPreset":
                     await withHistory(history, toUri(folder, message.fileId), () => copyFromPreset(folder, message.fileId));
                     return;
-                case "encryptAllSecrets":
-                    await withHistory(history, toUri(folder, message.fileId), () => encryptAllSecrets(this.landscape, folder, message.fileId));
+                case "encryptAllSecretsWorkspace":
+                    await this.encryptAllSecretsWorkspace(folder, activeFileId, history);
                     return;
                 case "encryptSecret":
                     await withHistory(history, toUri(folder, message.fileId), (uri) =>
                         setEnvValue(uri, message.envName, encryptForProject(message.plaintext, dirname(uri.fsPath))),
                     );
                     return;
+                case "setFileText":
+                    await withHistory(history, toUri(folder, message.fileId), (uri) => writeText(uri, message.text));
+                    return;
+                case "discardChanges":
+                    await withHistory(history, toUri(folder, message.fileId), (uri) => revertToSaved(uri));
+                    return;
                 case "undo":
                     await history.undo();
                     return;
                 case "redo":
                     await history.redo();
-                    return;
-                case "revealSecret":
-                    await this.revealSecret(folder, message.requestId, message.fileId, message.envName, post);
                     return;
                 case "saveFile":
                     await saveDocument(toUri(folder, message.fileId));
@@ -173,28 +175,26 @@ export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
         }
     }
 
-    private async revealSecret(
-        folder: vscode.WorkspaceFolder,
-        requestId: string,
-        fileId: string,
-        envName: string,
-        post: (message: HostToWebview) => void,
-    ): Promise<void> {
-        const { text } = await readText(toUri(folder, fileId));
-        const raw = getValue(parseEnv(text), envName);
-        if (raw === undefined) {
-            post({ type: "revealSecretResult", requestId, fileId, envName, ok: false, message: "No value set" });
-            return;
+    // Encrypt every plaintext secret across all .env files in one grouped undo step. Snapshots are
+    // taken before/after each affected file so a single Ctrl+Z reverts the whole batch.
+    private async encryptAllSecretsWorkspace(folder: vscode.WorkspaceFolder, activeFileId: string, history: EditHistory): Promise<void> {
+        const landscape = await this.landscape.build(folder, activeFileId);
+        const affected = Object.values(landscape.files)
+            .filter((view) => view.rows.some((row) => row.status === "secret-plaintext"))
+            .map((view) => toUri(folder, view.fileId));
+        const before = await Promise.all(affected.map((uri) => currentText(uri)));
+
+        const { count } = await encryptAllSecrets(folder, landscape);
+
+        const snapshots: Snapshot[] = [];
+        for (let i = 0; i < affected.length; i++) {
+            const after = await currentText(affected[i]!);
+            if (after !== before[i]) {
+                snapshots.push({ uri: affected[i]!, before: before[i]!, after });
+            }
         }
-        if (!isEnvelope(raw)) {
-            post({ type: "revealSecretResult", requestId, fileId, envName, ok: true, value: raw });
-            return;
-        }
-        try {
-            post({ type: "revealSecretResult", requestId, fileId, envName, ok: true, value: decryptValue(raw) });
-        } catch (cause) {
-            post({ type: "revealSecretResult", requestId, fileId, envName, ok: false, message: (cause as Error).message });
-        }
+        history.recordBatch(snapshots);
+        void vscode.window.showInformationMessage(`Encrypted ${count} secret${count === 1 ? "" : "s"}.`);
     }
 }
 

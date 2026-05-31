@@ -17,7 +17,8 @@ export const STATUS_ICON: Record<VarStatus, string> = {
     "using-default": "·",
     invalid: "✕",
     unknown: "?",
-    "secret-encrypted": "🔒",
+    // secret-encrypted renders the monochrome lock SVG (icon("lock")) at the call sites, not a glyph.
+    "secret-encrypted": "",
     "secret-plaintext": "⚠",
     "no-schema": "",
 };

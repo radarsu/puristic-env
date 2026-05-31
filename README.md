@@ -19,12 +19,12 @@ Your app and the editor load the same `ConfigDefinition`, so they can't drift.
 
 | Capability | puristic | Syntax exts (DotENV) | GUI editors (Visual Env) | Schema tools (varlock) | Cloud mgrs (Doppler/Infisical) |
 |---|:--:|:--:|:--:|:--:|:--:|
-| Validates against **your project's real typed TS schema** (live), not a DSL or cloud | ✅ | ❌ | ❌ | ◐ | ❌ |
-| **One schema** drives runtime, CI, codegen **and** the editor | ✅ | ❌ | ❌ | ◐ | ◐ |
-| Replaces the editor with **typed inputs** (number/url/enum/bool) | ✅ | ❌ | ◐ | ❌ | ❌ |
-| **Cross-service** present/missing/invalid matrix | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Validates against **your project's real typed TS schema** (live), not a DSL or cloud | ✓ | ✗ | ✗ | ◐ | ✗ |
+| **One schema** drives runtime, CI, codegen **and** the editor | ✓ | ✗ | ✗ | ◐ | ◐ |
+| Replaces the editor with **typed inputs** (number/url/enum/bool) | ✓ | ✗ | ◐ | ✗ | ✗ |
+| **Cross-service** present/missing/invalid matrix | ✓ | ✗ | ✗ | ✗ | ✗ |
 
-<sub>✅ yes · ◐ partial (varlock's schema is an in-file DSL; Visual Env infers types heuristically) · ❌ no</sub>
+<sub>✓ yes · ◐ partial (varlock's schema is an in-file DSL; Visual Env infers types heuristically) · ✗ no</sub>
 
 Local, in-file secret encryption is a bonus, not the headline — see [Secrets & security](#secrets--security).
 
@@ -87,7 +87,7 @@ Open that `.env` in VSCode and the **Puristic Env Manager** takes over. It shows
 | Default | optional/defaulted and unset — uses the schema default |
 | Invalid | present but fails Zod (the message and coercion hints are shown) |
 | Unknown | present in the file, not in the schema — offered for removal |
-| Encrypted 🔒 | secret stored as an `encrypted:v1:` envelope (reveal needs a private key) |
+| Encrypted | secret stored as an `encrypted:v1:` envelope (reveal needs a private key) |
 | Plaintext ⚠ | secret stored as plaintext — one click to encrypt |
 
 Edits go through VSCode's document model, so undo/redo/dirty/save are native and nothing hits disk until you save. The round-trip `.env` writer preserves comments, blank lines, key order, quoting, and `export` prefixes.

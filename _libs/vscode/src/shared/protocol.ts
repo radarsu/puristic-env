@@ -29,6 +29,9 @@ export interface VarRow {
     present: boolean;
     rawValue?: string;
     isEncrypted: boolean;
+    // Plaintext for display: the raw value for plaintext secrets, or the decrypted value for encrypted
+    // ones (set in the host only when a private key is available). Undefined when it cannot be revealed.
+    decrypted?: string;
     status: VarStatus;
     message?: string;
 }
@@ -38,6 +41,8 @@ export interface FileView {
     fileName: string;
     dirId: string;
     dirty: boolean;
+    // Raw file contents, shown verbatim in the "File" (raw text) tab.
+    text: string;
     hasSchema: boolean;
     configError?: string;
     rows: VarRow[];
@@ -78,13 +83,14 @@ export interface Landscape {
     columns: MatrixColumn[];
     matrix: MatrixSection[];
     activeFileId: string;
+    // False when no private key is configured, so encrypted secrets stay masked and the UI shows a hint.
+    privateKeyAvailable: boolean;
 }
 
 export type HostToWebview =
     | { type: "hydrate"; landscape: Landscape }
     | { type: "landscapeUpdated"; landscape: Landscape }
     | { type: "fileDirtyChanged"; fileId: string; dirty: boolean }
-    | { type: "revealSecretResult"; requestId: string; fileId: string; envName: string; ok: boolean; value?: string; message?: string }
     | { type: "actionError"; requestId?: string; message: string };
 
 export type WebviewToHost =
@@ -97,10 +103,11 @@ export type WebviewToHost =
     | { type: "removeKey"; fileId: string; envName: string }
     | { type: "resetToDefault"; fileId: string; envName: string }
     | { type: "encryptSecret"; fileId: string; envName: string; plaintext: string }
-    | { type: "revealSecret"; requestId: string; fileId: string; envName: string }
+    | { type: "setFileText"; fileId: string; text: string }
+    | { type: "discardChanges"; fileId: string }
     | { type: "saveFile"; fileId: string }
     | { type: "saveAll" }
     | { type: "openAsPlainText"; fileId: string }
-    | { type: "encryptAllSecrets"; fileId: string }
+    | { type: "encryptAllSecretsWorkspace" }
     | { type: "undo" }
     | { type: "redo" };

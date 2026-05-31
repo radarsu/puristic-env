@@ -15,7 +15,7 @@
         "cache:clear": "find . \\( -name '.cache' -or -name 'dist' -or -name '.turbo' \\) -exec rm -rf '{}' +",
         "deps:up": "pnpm --recursive update --latest",
         "libs:watch": "nice -n 15 tsc --build --watch --preserveWatchOutput tsconfig.libs.json",
-        "dev": "code /home/radarsu/radarsu/repositories/confederation/_libs/vscode"
+        "dev": "code ./_libs/vscode"
     },
     "devDependencies": {
         "@biomejs/biome": "catalog:",

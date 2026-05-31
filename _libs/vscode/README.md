@@ -48,8 +48,8 @@ Schema paths map to env var names: `["server","httpsPort"]` → `SERVER_HTTPS_PO
 | Default | optional/defaulted and unset — uses the schema default |
 | Invalid | present but fails Zod (the message is shown; coercion hints included) |
 | Unknown | present in the file, not in the schema — offered for removal |
-| Encrypted 🔒 | secret value stored as a `encrypted:v1:` envelope (reveal needs a private key) |
-| Plaintext ⚠ | secret stored as plaintext — one click to encrypt |
+| Encrypted | secret value stored as a `encrypted:v1:` envelope |
+| Plaintext ⚠ | secret stored as plaintext — encrypt it from the banner |
 
 ## Editing & secrets
 
@@ -57,10 +57,15 @@ All edits go through the VSCode document model (`WorkspaceEdit`), so undo, redo,
 save are native and nothing is written to disk until you save. The round-trip `.env` writer
 preserves comments, blank lines, key order, quoting, and `export` prefixes.
 
-Editing a secret-marked key encrypts the value with the project's public key
-(`.config/purenv-pub.key`, found by walking up to the nearest `package.json`, like core). If no
-key exists yet, run `purenv keygen`. Writing a secret needs only the public key. Revealing one
-decrypts in the extension host, never the webview, and needs a configured private key.
+Secrets are shown decrypted by default for seamless editing — the host decrypts them (never the
+webview) when a private key is configured; **Hide secrets** in the banner masks them, and without a
+key encrypted values stay masked. Editing a secret-marked key encrypts the value with the project's
+public key (`.config/purenv-pub.key`, found by walking up to the nearest `package.json`, like core);
+if no key exists yet, run `purenv keygen`. Writing a secret needs only the public key.
+
+`secret: true` is a best-practice hint, not enforcement — `loadConfig` reads plaintext and encrypted
+secrets alike. **Encrypt all plaintext secrets** in the banner sweeps every `.env` file across the
+workspace in one undoable step.
 
 ## Build & develop
 

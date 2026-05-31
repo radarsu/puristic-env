@@ -18,6 +18,7 @@ function file(fileId: string, values: Record<string, string>, overrides: Partial
         fileName: fileId.slice(fileId.lastIndexOf("/") + 1),
         dirId: fileId.slice(0, fileId.lastIndexOf("/")),
         dirty: false,
+        text: "",
         entries: Object.entries(values).map(([key, value]) => ({ key, value })),
         configId: "apps/api/env.config.ts",
         descriptors,
@@ -73,6 +74,7 @@ describe("buildLandscape", () => {
             fileName: ".env",
             dirId: "misc",
             dirty: false,
+            text: "FOO=bar\n",
             entries: [{ key: "FOO", value: "bar" }],
         };
         const view = buildLandscape({ files: [input], activeFileId: input.fileId }).files["misc/.env"]!;
@@ -89,6 +91,7 @@ describe("buildLandscape", () => {
             fileName: ".env",
             dirId: "apps/web",
             dirty: false,
+            text: "",
             entries: [],
             configId: "apps/web/env.config.ts",
             descriptors: inspectSchema(otherSchema),
@@ -118,6 +121,7 @@ describe("buildLandscape", () => {
             fileName: ".env",
             dirId: "svc",
             dirty: false,
+            text: "",
             entries: [],
             configId: "svc/env.config.ts",
             descriptors: inspectSchema(controlSchema),

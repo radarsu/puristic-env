@@ -1,5 +1,6 @@
 import type { MatrixColumn, MatrixSection } from "../../shared/protocol.js";
 import { h } from "../dom.js";
+import { icon } from "../icons.js";
 import type { AppState } from "../state.js";
 import { STATUS_ICON, STATUS_LABEL } from "./status.js";
 
@@ -40,7 +41,7 @@ function renderCell(status: string, column: MatrixColumn, envName: string): HTML
         return h("td", { class: "matrix-cell na", text: "·" });
     }
     const label = STATUS_LABEL[status as keyof typeof STATUS_LABEL] ?? status;
-    const icon = STATUS_ICON[status as keyof typeof STATUS_ICON] || "•";
+    const mark: Node | string = status === "secret-encrypted" ? icon("lock") : STATUS_ICON[status as keyof typeof STATUS_ICON] || "•";
     return h(
         "td",
         {
@@ -50,7 +51,7 @@ function renderCell(status: string, column: MatrixColumn, envName: string): HTML
             "data-env": envName,
             title: `${column.fileId} — ${label}`,
         },
-        [icon],
+        [mark],
     );
 }
 

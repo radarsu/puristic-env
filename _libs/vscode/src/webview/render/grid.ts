@@ -3,7 +3,7 @@ import { FORMAT_META, toInputValue } from "../../shared/formats.js";
 import type { FileView, VarRow } from "../../shared/protocol.js";
 import { h } from "../dom.js";
 import { icon } from "../icons.js";
-import { type AppState, revealKey } from "../state.js";
+import type { AppState } from "../state.js";
 import { STATUS_ICON, STATUS_LABEL } from "./status.js";
 
 const ERROR_STATUSES = new Set<VarStatus>(["missing-required", "invalid", "secret-plaintext"]);
@@ -80,19 +80,14 @@ function renderGridHeader(file: FileView): HTMLElement {
                   ["Copy from preset…"],
               )
             : undefined,
-        file.rows.some((row) => row.status === "secret-plaintext")
+        file.dirty ? h("button", { class: "btn", "data-action": "save", "data-file": file.fileId }, ["Save"]) : undefined,
+        file.dirty
             ? h(
                   "button",
-                  {
-                      class: "btn",
-                      "data-action": "encrypt-all-secrets",
-                      "data-file": file.fileId,
-                      title: "Encrypt every plaintext secret in this file",
-                  },
-                  ["Encrypt all secrets"],
+                  { class: "btn btn-ghost", "data-action": "discard", "data-file": file.fileId, title: "Revert unsaved changes to the last saved version" },
+                  ["Discard changes"],
               )
             : undefined,
-        file.dirty ? h("button", { class: "btn", "data-action": "save", "data-file": file.fileId }, ["Save"]) : undefined,
         h("button", { class: "btn btn-ghost", "data-action": "open-text", "data-file": file.fileId, title: "Open as plain text" }, ["Plain text"]),
     ]);
     return h("div", { class: "grid-header" }, [actions]);
@@ -113,13 +108,17 @@ function renderRow(state: AppState, fileId: string, row: VarRow): HTMLElement {
             : h("div", { class: `field-message${ERROR_STATUSES.has(row.status) ? " error" : ""}`, text: row.message }),
     ]);
 
+    const chipChildren =
+        row.status === "secret-encrypted"
+            ? [icon("lock"), STATUS_LABEL[row.status]]
+            : row.status === "using-default"
+              ? [STATUS_LABEL[row.status]]
+              : [`${STATUS_ICON[row.status]} ${STATUS_LABEL[row.status]}`.trim()];
     const status = h("div", { class: "cell-status" }, [
-        h("span", { class: `chip chip-${row.status}`, title: row.message ?? STATUS_LABEL[row.status] }, [
-            `${STATUS_ICON[row.status]} ${STATUS_LABEL[row.status]}`.trim(),
-        ]),
+        h("span", { class: `chip chip-${row.status}`, title: row.message ?? STATUS_LABEL[row.status] }, chipChildren),
     ]);
 
-    return h("div", { class: `row row-${row.status}`, role: "row" }, [name, value, status, renderActions(state, fileId, row)]);
+    return h("div", { class: `row row-${row.status}`, role: "row" }, [name, value, status, renderActions(fileId, row)]);
 }
 
 function renderControl(state: AppState, fileId: string, row: VarRow): HTMLElement {
@@ -171,15 +170,14 @@ function renderSelect(fileId: string, row: VarRow, options: string[]): HTMLSelec
 }
 
 function renderSecretControl(state: AppState, fileId: string, row: VarRow): HTMLElement {
-    const revealed = state.revealed.get(revealKey(fileId, row.envName));
-    if (revealed !== undefined) {
+    if (state.revealSecrets && row.decrypted !== undefined) {
         return h("input", {
             class: "value-input",
             type: "text",
             "data-action": "encrypt-set",
             "data-file": fileId,
             "data-env": row.envName,
-            value: revealed,
+            value: row.decrypted,
             spellcheck: "false",
         });
     }
@@ -195,28 +193,8 @@ function renderSecretControl(state: AppState, fileId: string, row: VarRow): HTML
     });
 }
 
-function renderActions(state: AppState, fileId: string, row: VarRow): HTMLElement {
+function renderActions(fileId: string, row: VarRow): HTMLElement {
     const actions = h("div", { class: "cell-actions" });
-    if (row.secret) {
-        const isRevealed = state.revealed.get(revealKey(fileId, row.envName)) !== undefined;
-        if (isRevealed) {
-            actions.append(h("button", { class: "btn btn-ghost", "data-action": "hide", "data-file": fileId, "data-env": row.envName }, ["Hide"]));
-        } else if (row.present) {
-            actions.append(
-                h(
-                    "button",
-                    {
-                        class: "btn btn-ghost",
-                        "data-action": "reveal",
-                        "data-file": fileId,
-                        "data-env": row.envName,
-                        title: "Decrypt (needs a private key)",
-                    },
-                    ["Reveal"],
-                ),
-            );
-        }
-    }
     if (row.status === "using-default" && row.defaultValue !== undefined) {
         actions.append(
             h(

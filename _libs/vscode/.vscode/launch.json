@@ -6,6 +6,9 @@
             "type": "extensionHost",
             "request": "launch",
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/fixtures"],
+            // Throwaway fixture private key — guards only the demo .env data, not a real secret.
+            // Lets the extension decrypt/reveal the fixture's encrypted secrets out of the box.
+            "env": { "PURENV_PRIVATE_KEY_FILE": "${workspaceFolder}/fixtures/api/.config/purenv-private.key" },
             "outFiles": ["${workspaceFolder}/dist/**/*.cjs", "${workspaceFolder}/dist/**/*.mjs"],
             "preLaunchTask": "build"
         }

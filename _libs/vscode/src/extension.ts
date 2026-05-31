@@ -65,15 +65,13 @@ function openAsPlainText(): void {
 
 async function encryptAllSecretsCommand(landscape: LandscapeService): Promise<void> {
     const uri = activeTabUri();
-    if (uri === undefined || !isEnvUri(uri)) {
-        void vscode.window.showInformationMessage("Open a .env file first, then run “Puristic: Encrypt All Plaintext Secrets”.");
-        return;
-    }
-    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    const folder = uri !== undefined ? vscode.workspace.getWorkspaceFolder(uri) : vscode.workspace.workspaceFolders?.[0];
     if (folder === undefined) {
+        void vscode.window.showInformationMessage("Open a workspace folder to encrypt secrets.");
         return;
     }
-    const count = await encryptAllSecrets(landscape, folder, relativeId(folder, uri));
+    const activeFileId = uri !== undefined && isEnvUri(uri) ? relativeId(folder, uri) : "";
+    const { count } = await encryptAllSecrets(folder, await landscape.build(folder, activeFileId));
     void vscode.window.showInformationMessage(`Encrypted ${count} secret${count === 1 ? "" : "s"}.`);
 }
 

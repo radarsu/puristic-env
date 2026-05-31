@@ -1,4 +1,4 @@
-import type { ConfigDefinition } from "@confederation/core/index.js";
+import type { ConfigDefinition } from "@puristic/env/index.js";
 import { z } from "zod";
 
 // Fixture used by the config-host integration test and as a sample of the convention:

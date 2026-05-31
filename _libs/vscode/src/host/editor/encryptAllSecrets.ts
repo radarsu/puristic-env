@@ -1,33 +1,32 @@
 import { dirname } from "node:path";
-import { getValue, parseEnv } from "@puristic/env/index.js";
 import type * as vscode from "vscode";
+import type { Landscape } from "../../shared/protocol.js";
 import { encryptForProject } from "../secrets.js";
 import { setEnvValue } from "./documentWrites.js";
-import type { LandscapeService } from "./landscapeService.js";
-import { readText, toUri } from "./uris.js";
+import { toUri } from "./uris.js";
 
-// Encrypt every plaintext secret in a .env file in place. Shared by the webview "Encrypt all
-// secrets" action and the puristic.encryptAllSecrets command. Returns how many were encrypted.
-export async function encryptAllSecrets(landscape: LandscapeService, folder: vscode.WorkspaceFolder, fileId: string): Promise<number> {
-    const built = await landscape.build(folder, fileId);
-    const view = built.files[fileId];
-    if (view === undefined) {
-        return 0;
-    }
-    const uri = toUri(folder, fileId);
-    const { text } = await readText(uri);
-    const doc = parseEnv(text);
+// Encrypt every plaintext secret across all files in the landscape in place. Shared by the webview
+// "Encrypt all plaintext secrets" action and the puristic.encryptAllSecrets command. Each file is
+// encrypted with its own project public key (files may live in different projects). Returns the total
+// encrypted and the ids of the files that changed (so the caller can group them into one undo step).
+export async function encryptAllSecrets(folder: vscode.WorkspaceFolder, landscape: Landscape): Promise<{ count: number; fileIds: string[] }> {
     let count = 0;
-    for (const row of view.rows) {
-        if (row.status !== "secret-plaintext") {
-            continue;
+    const fileIds: string[] = [];
+    for (const view of Object.values(landscape.files)) {
+        const uri = toUri(folder, view.fileId);
+        const projectDir = dirname(uri.fsPath);
+        let changed = false;
+        for (const row of view.rows) {
+            if (row.status !== "secret-plaintext" || row.rawValue === undefined || row.rawValue === "") {
+                continue;
+            }
+            await setEnvValue(uri, row.envName, encryptForProject(row.rawValue, projectDir));
+            count++;
+            changed = true;
         }
-        const value = getValue(doc, row.envName);
-        if (value === undefined || value === "") {
-            continue;
+        if (changed) {
+            fileIds.push(view.fileId);
         }
-        await setEnvValue(uri, row.envName, encryptForProject(value, dirname(uri.fsPath)));
-        count++;
     }
-    return count;
+    return { count, fileIds };
 }

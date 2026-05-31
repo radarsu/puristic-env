@@ -229,6 +229,79 @@ button {
     z-index: 1;
 }
 
+.raw-wrap {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    margin: 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--vscode-editor-background);
+}
+
+.raw-wrap:focus-within {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
+}
+
+/* The textarea (input) and the highlight <pre> overlay must share identical box metrics so tokens line up
+   under the caret. Border lives on the wrap so neither layer offsets the other. */
+.raw,
+.raw-highlight {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 12px 14px;
+    border: 0;
+    box-sizing: border-box;
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre;
+    tab-size: 4;
+}
+
+.raw {
+    z-index: 1;
+    resize: none;
+    overflow: auto;
+    background: transparent;
+    color: transparent;
+    caret-color: var(--vscode-editor-foreground);
+}
+
+.raw:focus {
+    outline: none;
+}
+
+.raw-highlight {
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    color: var(--vscode-editor-foreground);
+}
+
+.tok-comment {
+    color: var(--muted);
+    font-style: italic;
+}
+.tok-key {
+    color: var(--info);
+}
+.tok-kw {
+    color: var(--ok);
+}
+.tok-op {
+    color: var(--muted);
+}
+.tok-value {
+    color: var(--vscode-foreground);
+}
+.tok-envelope {
+    color: var(--warn);
+}
+
 .tabs {
     display: flex;
     gap: 4px;
@@ -583,6 +656,11 @@ select.value-input {
     cursor: pointer;
     font-weight: 700;
     background: none;
+}
+
+/* The encrypted cell renders a block SVG lock; center it like the text glyphs in other cells. */
+.matrix-cell .icon {
+    margin: 0 auto;
 }
 
 .matrix-cell.na {

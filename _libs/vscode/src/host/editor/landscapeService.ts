@@ -1,5 +1,5 @@
 import { dirname } from "node:path";
-import { associateConfigs, baseName, dirOf, type LeafDescriptorPublic, listEntries, parseEnv } from "@puristic/env/index.js";
+import { associateConfigs, baseName, decrypt, dirOf, type LeafDescriptorPublic, listEntries, parseEnv, resolvePrivateKey } from "@puristic/env/index.js";
 import * as vscode from "vscode";
 import type { Landscape } from "../../shared/protocol.js";
 import type { ConfigHostManager } from "../configHost/manager.js";
@@ -8,6 +8,42 @@ import { buildLandscape, type FileInput } from "../model/buildLandscape.js";
 import { readText, toUri } from "./uris.js";
 
 type DescriptorResult = LeafDescriptorPublic[] | { error: string };
+
+// Fill VarRow.decrypted so the webview can show secrets in plaintext by default. Plaintext secrets need
+// no key; encrypted ones are decrypted with the project's private key, resolved once. A missing key leaves
+// encrypted secrets masked (privateKeyAvailable = false); a single bad envelope is skipped, not fatal.
+function attachDecryptedSecrets(landscape: Landscape): void {
+    let key: Uint8Array | undefined;
+    let keyResolved = false;
+    for (const file of Object.values(landscape.files)) {
+        for (const row of file.rows) {
+            if (!row.secret || row.rawValue === undefined) {
+                continue;
+            }
+            if (!row.isEncrypted) {
+                row.decrypted = row.rawValue;
+                continue;
+            }
+            if (!keyResolved) {
+                keyResolved = true;
+                try {
+                    key = resolvePrivateKey();
+                    landscape.privateKeyAvailable = true;
+                } catch {
+                    return;
+                }
+            }
+            if (key === undefined) {
+                return;
+            }
+            try {
+                row.decrypted = decrypt(row.rawValue, key);
+            } catch {
+                // Wrong key or corrupt envelope — leave it masked.
+            }
+        }
+    }
+}
 
 export class LandscapeService {
     constructor(private readonly manager: ConfigHostManager) {}
@@ -21,7 +57,9 @@ export class LandscapeService {
         for (const fileId of scan.envFileIds) {
             files.push(await this.buildFileInput(folder, fileId, association.get(fileId), cache));
         }
-        return buildLandscape({ files, activeFileId });
+        const landscape = buildLandscape({ files, activeFileId });
+        attachDecryptedSecrets(landscape);
+        return landscape;
     }
 
     private async buildFileInput(
@@ -33,7 +71,7 @@ export class LandscapeService {
         const uri = toUri(folder, fileId);
         const { text, dirty } = await readText(uri);
         const entries = listEntries(parseEnv(text));
-        const base: FileInput = { fileId, fileName: baseName(fileId), dirId: dirOf(fileId), dirty, entries };
+        const base: FileInput = { fileId, fileName: baseName(fileId), dirId: dirOf(fileId), dirty, text, entries };
         if (configId === undefined) {
             return base;
         }
