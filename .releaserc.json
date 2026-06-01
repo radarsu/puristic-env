@@ -7,6 +7,7 @@
         [
             "@semantic-release/exec",
             {
+                "verifyConditionsCmd": "pnpm --dir _libs/vscode exec vsce verify-pat radarsu",
                 "prepareCmd": "pnpm --dir _libs/core version ${nextRelease.version} --no-git-tag-version --no-git-checks --allow-same-version && pnpm --dir _libs/cli version ${nextRelease.version} --no-git-tag-version --no-git-checks --allow-same-version && pnpm --dir _libs/vscode version ${nextRelease.version} --no-git-tag-version --no-git-checks --allow-same-version && pnpm turbo run build --filter=@puristic/env --filter=@puristic/env-cli --filter=env",
                 "publishCmd": "pnpm --dir _libs/core publish --access public --no-git-checks && pnpm --dir _libs/cli publish --access public --no-git-checks && pnpm --dir _libs/vscode exec vsce publish --no-dependencies"
             }

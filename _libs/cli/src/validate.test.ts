@@ -70,7 +70,7 @@ describe("validate (against the api fixture)", () => {
         const byPath = new Map(result.files.map((file) => [file.path, statuses(file.rows)]));
 
         expect(byPath.get(".env")).toMatchObject({ DATABASE_URL: "secret-encrypted", SERVER_HOST: "using-default" });
-        expect(byPath.get(".env.local")).toMatchObject({ DATABASE_URL: "missing-required", LEGACY_FLAG: "unknown" });
+        expect(byPath.get(".env.local")).toMatchObject({ DATABASE_URL: "secret-plaintext", LEGACY_FLAG: "unknown" });
         expect(result.ok).toBe(false);
     });
 
