@@ -108,17 +108,24 @@ function renderRow(state: AppState, fileId: string, row: VarRow): HTMLElement {
             : h("div", { class: `field-message${ERROR_STATUSES.has(row.status) ? " error" : ""}`, text: row.message }),
     ]);
 
+    // rawValue is set only when the key exists in the file: undefined ⇒ schema-only "ghost" row,
+    // "" ⇒ present but blank (KEY=). Both classify as using-default, so distinguish them here.
+    const ghost = row.rawValue === undefined;
+    const empty = row.status === "using-default" && row.rawValue === "";
     const chipChildren =
         row.status === "secret-encrypted"
             ? [icon("lock"), STATUS_LABEL[row.status]]
-            : row.status === "using-default"
-              ? [STATUS_LABEL[row.status]]
-              : [`${STATUS_ICON[row.status]} ${STATUS_LABEL[row.status]}`.trim()];
+            : empty
+              ? ["Empty"]
+              : row.status === "using-default"
+                ? [STATUS_LABEL[row.status]]
+                : [`${STATUS_ICON[row.status]} ${STATUS_LABEL[row.status]}`.trim()];
+    const chipTitle = empty ? "Defined in the file but blank" : (row.message ?? STATUS_LABEL[row.status]);
     const status = h("div", { class: "cell-status" }, [
-        h("span", { class: `chip chip-${row.status}`, title: row.message ?? STATUS_LABEL[row.status] }, chipChildren),
+        h("span", { class: `chip chip-${empty ? "empty" : row.status}`, title: chipTitle }, chipChildren),
     ]);
 
-    return h("div", { class: `row row-${row.status}`, role: "row" }, [name, value, status, renderActions(fileId, row)]);
+    return h("div", { class: `row row-${row.status}${ghost ? " ghost" : ""}`, role: "row" }, [name, value, status, renderActions(fileId, row)]);
 }
 
 function renderControl(state: AppState, fileId: string, row: VarRow): HTMLElement {
@@ -195,18 +202,21 @@ function renderSecretControl(state: AppState, fileId: string, row: VarRow): HTML
 
 function renderActions(fileId: string, row: VarRow): HTMLElement {
     const actions = h("div", { class: "cell-actions" });
-    if (row.status === "using-default" && row.defaultValue !== undefined) {
+    // Schema key not in the file yet: offer a one-click add, prefilled with the default when there is
+    // one. Secrets are excluded — typing into their input creates + encrypts the line in one step.
+    if (row.rawValue === undefined && !row.secret) {
         actions.append(
             h(
                 "button",
                 {
-                    class: "btn btn-ghost",
-                    "data-action": "use-default",
+                    class: "btn",
+                    "data-action": "add-key",
                     "data-file": fileId,
                     "data-env": row.envName,
                     "data-default": row.defaultValue,
+                    title: row.defaultValue !== undefined ? `Add to file (prefilled with default: ${row.defaultValue})` : "Add this key to the file",
                 },
-                ["Use default"],
+                [icon("plus"), "Add"],
             ),
         );
     }

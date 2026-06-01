@@ -3,7 +3,7 @@
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-export type IconName = "check" | "alert" | "warn" | "dot" | "search" | "box" | "info" | "lock";
+export type IconName = "check" | "alert" | "warn" | "dot" | "search" | "box" | "info" | "lock" | "plus";
 
 interface Shape {
     tag: "path" | "circle" | "line";
@@ -45,6 +45,10 @@ const SHAPES: Record<IconName, Shape[]> = {
         { tag: "path", attrs: { d: "M6 11h12v9H6z" } },
         { tag: "path", attrs: { d: "M8.5 11V8a3.5 3.5 0 0 1 7 0v3" } },
         FILLED_DOT("15"),
+    ],
+    plus: [
+        { tag: "line", attrs: { x1: "12", y1: "5", x2: "12", y2: "19" } },
+        { tag: "line", attrs: { x1: "5", y1: "12", x2: "19", y2: "12" } },
     ],
 };
 

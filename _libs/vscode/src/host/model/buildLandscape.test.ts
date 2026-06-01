@@ -54,6 +54,17 @@ describe("buildLandscape", () => {
         expect(view.hasSchema).toBe(true);
     });
 
+    it("separates a key absent from the file from one present but empty", () => {
+        const input = file("apps/api/.env", { SERVER_HOST: "" }); // blank line; NODE_ENV/SERVER_PORT absent
+        const view = buildLandscape({ files: [input], activeFileId: input.fileId }).files["apps/api/.env"]!;
+
+        // present but blank: rawValue is the empty string, still falls back to its default
+        expect(row(view, "SERVER_HOST").rawValue).toBe("");
+        expect(row(view, "SERVER_HOST").status).toBe("using-default");
+        // not in the file at all: rawValue stays undefined (the "ghost" row the Add button targets)
+        expect(row(view, "NODE_ENV").rawValue).toBeUndefined();
+    });
+
     it("warns when a secret is stored as plaintext", () => {
         const input = file("apps/api/.env", { NODE_ENV: "dev", SERVER_PORT: "1", DATABASE_URL: "https://plain" });
         const view = buildLandscape({ files: [input], activeFileId: input.fileId }).files["apps/api/.env"]!;

@@ -96,7 +96,7 @@ function onClick(event: MouseEvent): void {
             persist();
             render();
             return;
-        case "use-default":
+        case "add-key":
             if (file !== undefined && env !== undefined) {
                 send({ type: "addKey", fileId: file, envName: env, value: target.dataset["default"] ?? "" });
             }

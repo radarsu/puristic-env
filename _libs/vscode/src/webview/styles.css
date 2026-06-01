@@ -436,6 +436,21 @@ button {
     background: color-mix(in srgb, var(--error) 7%, transparent);
 }
 
+/* Schema key not present in the file — proposed by the schema, not written yet. */
+.row.ghost {
+    border-left: 2px dashed color-mix(in srgb, var(--muted) 50%, transparent);
+    padding-left: 12px; /* 14px base − 2px rail, so content doesn't shift */
+}
+
+.row.ghost .var-display {
+    font-style: italic;
+    color: var(--muted);
+}
+
+.row.ghost .value-input {
+    opacity: 0.65;
+}
+
 .cell-name {
     display: flex;
     flex-direction: column;
@@ -541,6 +556,13 @@ select.value-input {
 .chip-no-schema {
     color: var(--muted);
     background: color-mix(in srgb, var(--muted) 18%, transparent);
+}
+
+/* Present in the file but blank (KEY=) — hollow outline, distinct from the solid grey "Default". */
+.chip-empty {
+    color: var(--muted);
+    background: transparent;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 40%, transparent);
 }
 
 .chip-unknown {
