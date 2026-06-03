@@ -18,7 +18,7 @@ export {
 } from "./crypto/resolveKey.js";
 export { associateConfigs } from "./discovery/associate.js";
 export { groupByDirectory } from "./discovery/groupByDirectory.js";
-export { baseName, dirOf, isAncestorOrSame } from "./discovery/paths.js";
+export { baseName, dirOf, isAncestorOrSame, packageRootOf, preferConfig } from "./discovery/paths.js";
 export {
     addKey,
     type EnvDocument,

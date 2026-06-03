@@ -12,7 +12,7 @@ import {
     type VarStatus,
     validateValues,
 } from "@puristic/env/index.js";
-import { findNearestConfig } from "./discoverConfig.js";
+import { findGoverningConfig } from "./discoverConfig.js";
 
 const EXCLUDED_DIRS = new Set(["node_modules", "dist", ".cache", ".turbo", ".git"]);
 const TEMPLATE_NAMES = new Set([".env.example", ".env.sample", ".env.template"]);
@@ -59,7 +59,7 @@ export async function validate(options: ValidateOptions): Promise<ValidateResult
     const cache = new Map<string, LoadedConfig>();
     const files: ValidateFileResult[] = [];
     for (const envPath of envPaths) {
-        const configPath = override ?? findNearestConfig(dirname(envPath));
+        const configPath = override ?? findGoverningConfig(dirname(envPath));
         if (configPath === undefined) {
             files.push({ path: relative(cwd, envPath), rows: [], errorCount: 0, warningCount: 0 });
             continue;

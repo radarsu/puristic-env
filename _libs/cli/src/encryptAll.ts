@@ -11,7 +11,7 @@ import {
     serializeEnv,
     setValue,
 } from "@puristic/env/index.js";
-import { findNearestConfig } from "./discoverConfig.js";
+import { findGoverningConfig } from "./discoverConfig.js";
 
 export interface EncryptAllOptions {
     envFiles: string[];
@@ -32,7 +32,7 @@ export async function encryptAll(options: EncryptAllOptions): Promise<EncryptAll
     const files: { path: string; encrypted: number }[] = [];
     for (const file of options.envFiles) {
         const envPath = resolve(cwd, file);
-        const configPath = override ?? findNearestConfig(dirname(envPath));
+        const configPath = override ?? findGoverningConfig(dirname(envPath));
         if (configPath === undefined) {
             throw new Error(`No env.config.* governs ${envPath}. Pass --config <path>.`);
         }

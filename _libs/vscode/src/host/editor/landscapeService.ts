@@ -50,7 +50,7 @@ export class LandscapeService {
 
     async build(folder: vscode.WorkspaceFolder, activeFileId: string): Promise<Landscape> {
         const scan = await scanWorkspace(folder);
-        const association = associateConfigs(scan.envFileIds, scan.configIds);
+        const association = associateConfigs(scan.envFileIds, scan.configIds, scan.packageRootIds);
         const cache = new Map<string, DescriptorResult>();
 
         const files: FileInput[] = [];

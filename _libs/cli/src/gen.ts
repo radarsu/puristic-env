@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { generateDts, generateEnvExample, generateJsonSchema, inspectSchema, loadDefinition } from "@puristic/env/index.js";
-import { findNearestConfig } from "./discoverConfig.js";
+import { findGoverningConfig } from "./discoverConfig.js";
 
 export interface GenOptions {
     config?: string;
@@ -47,7 +47,7 @@ function resolveConfigPath(config: string | undefined, cwd: string): string {
     if (config !== undefined) {
         return resolve(cwd, config);
     }
-    const found = findNearestConfig(cwd);
+    const found = findGoverningConfig(cwd);
     if (found === undefined) {
         throw new Error(`No env.config.* found at or above ${cwd}. Pass --config <path>.`);
     }

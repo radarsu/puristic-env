@@ -1,3 +1,4 @@
+import { dirOf } from "@puristic/env/index.js";
 import * as vscode from "vscode";
 import type { PackageManifest } from "../detectPuristic.js";
 import { filterGitignored } from "./gitignore.js";
@@ -6,6 +7,7 @@ export interface WorkspaceScan {
     folder: vscode.WorkspaceFolder;
     envFileIds: string[];
     configIds: string[];
+    packageRootIds: string[];
     manifests: PackageManifest[];
 }
 
@@ -15,16 +17,24 @@ export async function scanWorkspace(folder: vscode.WorkspaceFolder): Promise<Wor
     const configGlob = config.get<string>("configFileGlob") ?? "**/env.config.{ts,mts,cts,js,mjs,cjs}";
     const exclude = excludePattern(config.get<string[]>("exclude") ?? []);
 
-    const [envUris, configUris] = await Promise.all([
+    const [envUris, configUris, packageUris] = await Promise.all([
         vscode.workspace.findFiles(new vscode.RelativePattern(folder, envGlob), exclude).then((uris) => filterGitignored(folder, uris)),
         vscode.workspace.findFiles(new vscode.RelativePattern(folder, configGlob), exclude).then((uris) => filterGitignored(folder, uris)),
+        vscode.workspace.findFiles(new vscode.RelativePattern(folder, "**/package.json"), exclude).then((uris) => filterGitignored(folder, uris)),
     ]);
 
     const envFileIds = envUris.map((uri) => relativeId(folder, uri)).sort();
     const configIds = configUris.map((uri) => relativeId(folder, uri)).sort();
-    const manifests = configIds.length > 0 ? [] : await readManifests(folder, exclude);
+    const packageRootIds = packageUris.map((uri) => dirOf(relativeId(folder, uri))).sort();
+    const manifests = await Promise.all(packageUris.map((uri) => readManifest(uri)));
 
-    return { folder, envFileIds, configIds, manifests };
+    return {
+        folder,
+        envFileIds,
+        configIds,
+        packageRootIds,
+        manifests: manifests.filter((manifest): manifest is PackageManifest => manifest !== undefined),
+    };
 }
 
 function excludePattern(patterns: string[]): vscode.GlobPattern {
@@ -33,13 +43,6 @@ function excludePattern(patterns: string[]): vscode.GlobPattern {
 
 function relativeId(folder: vscode.WorkspaceFolder, uri: vscode.Uri): string {
     return uri.path.slice(folder.uri.path.length).replace(/^\/+/, "");
-}
-
-async function readManifests(folder: vscode.WorkspaceFolder, exclude: vscode.GlobPattern): Promise<PackageManifest[]> {
-    const found = await vscode.workspace.findFiles(new vscode.RelativePattern(folder, "**/package.json"), exclude);
-    const uris = await filterGitignored(folder, found);
-    const manifests = await Promise.all(uris.map((uri) => readManifest(uri)));
-    return manifests.filter((manifest): manifest is PackageManifest => manifest !== undefined);
 }
 
 async function readManifest(uri: vscode.Uri): Promise<PackageManifest | undefined> {

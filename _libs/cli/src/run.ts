@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { constants } from "node:os";
 import { resolve } from "node:path";
 import { decrypt, expandEnv, inspectSchema, isEnvelope, listEntries, loadDefinition, parseEnv, resolvePrivateKey } from "@puristic/env/index.js";
-import { findNearestConfig } from "./discoverConfig.js";
+import { findGoverningConfig } from "./discoverConfig.js";
 
 const DEFAULT_ENV_FILES = [".env", ".env.local"];
 
@@ -78,7 +78,7 @@ async function applyDefaults(
     configPath: string | undefined,
     onWarn?: (message: string) => void,
 ): Promise<void> {
-    const config = configPath !== undefined ? resolve(cwd, configPath) : findNearestConfig(cwd);
+    const config = configPath !== undefined ? resolve(cwd, configPath) : findGoverningConfig(cwd);
     if (config === undefined) {
         onWarn?.("--defaults: no env.config.* found above the current directory; skipping schema defaults.");
         return;
