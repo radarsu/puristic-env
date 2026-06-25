@@ -22,25 +22,47 @@ export function renderGrid(state: AppState, file: FileView): HTMLElement {
 
     const rows = file.rows.filter((row) => matchesFilter(row, state.filter));
     if (rows.length === 0) {
-        container.append(h("div", { class: "empty", text: "No variables match the filter." }));
-        return container;
-    }
-
-    const groups = new Map<string, VarRow[]>();
-    const order: string[] = [];
-    for (const row of rows) {
-        const existing = groups.get(row.group);
-        if (existing === undefined) {
-            groups.set(row.group, [row]);
-            order.push(row.group);
-        } else {
-            existing.push(row);
+        // Distinguish a genuinely empty file from a filter that hides everything; plain files still
+        // get the add-variable form so the first key can be created.
+        const text = state.filter !== "" ? "No variables match the filter." : "No variables yet.";
+        container.append(h("div", { class: "empty", text }));
+    } else {
+        const groups = new Map<string, VarRow[]>();
+        const order: string[] = [];
+        for (const row of rows) {
+            const existing = groups.get(row.group);
+            if (existing === undefined) {
+                groups.set(row.group, [row]);
+                order.push(row.group);
+            } else {
+                existing.push(row);
+            }
+        }
+        for (const group of order) {
+            container.append(renderCard(state, file.fileId, group, groups.get(group) ?? []));
         }
     }
-    for (const group of order) {
-        container.append(renderCard(state, file.fileId, group, groups.get(group) ?? []));
+    if (!file.hasSchema) {
+        container.append(renderAddVariable(file.fileId));
     }
     return container;
+}
+
+// Plain (no-schema) files have no ghost rows to "Add", so offer a free-form key/value entry. The
+// distinct data-action values are ignored by the value-commit handlers; main.ts reads them on add-new.
+function renderAddVariable(fileId: string): HTMLElement {
+    return h("div", { class: "add-row" }, [
+        h("input", {
+            class: "value-input",
+            type: "text",
+            "data-action": "new-key-name",
+            "data-file": fileId,
+            placeholder: "NEW_KEY",
+            spellcheck: "false",
+        }),
+        h("input", { class: "value-input", type: "text", "data-action": "new-key-value", "data-file": fileId, placeholder: "value", spellcheck: "false" }),
+        h("button", { class: "btn", "data-action": "add-new", "data-file": fileId, title: "Add a new variable to this file" }, [icon("plus"), "Add"]),
+    ]);
 }
 
 function renderCard(state: AppState, fileId: string, group: string, rows: VarRow[]): HTMLElement {
@@ -220,7 +242,7 @@ function renderActions(fileId: string, row: VarRow): HTMLElement {
             ),
         );
     }
-    if (row.status === "unknown") {
+    if (row.status === "unknown" || row.status === "no-schema") {
         actions.append(h("button", { class: "btn btn-ghost", "data-action": "remove", "data-file": fileId, "data-env": row.envName }, ["Remove"]));
     }
     if (!row.secret && row.present && row.hasDefault) {

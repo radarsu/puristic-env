@@ -121,6 +121,11 @@ function onClick(event: MouseEvent): void {
             persist();
             render();
             return;
+        case "add-new":
+            if (file !== undefined) {
+                addNewKey(target, file);
+            }
+            return;
         case "add-all":
             if (file !== undefined) {
                 send({ type: "addAllMissing", fileId: file });
@@ -161,6 +166,19 @@ function onClick(event: MouseEvent): void {
             }
             return;
     }
+}
+
+// Read the free-form key/value inputs next to the "Add" button (plain-mode files) and add the key.
+// The debounced landscapeUpdated re-render rebuilds the form, clearing the inputs.
+function addNewKey(button: HTMLElement, fileId: string): void {
+    const container = button.closest(".add-row");
+    const nameInput = container?.querySelector<HTMLInputElement>('[data-action="new-key-name"]');
+    const valueInput = container?.querySelector<HTMLInputElement>('[data-action="new-key-value"]');
+    const envName = nameInput?.value.trim() ?? "";
+    if (envName === "") {
+        return;
+    }
+    send({ type: "addKey", fileId, envName, value: valueInput?.value ?? "" });
 }
 
 type EditTarget = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;

@@ -50,11 +50,16 @@ export class LandscapeService {
 
     async build(folder: vscode.WorkspaceFolder, activeFileId: string): Promise<Landscape> {
         const scan = await scanWorkspace(folder);
-        const association = associateConfigs(scan.envFileIds, scan.configIds, scan.packageRootIds);
+        // The user explicitly opened this document in the env editor, so it must always be manageable —
+        // even when the scan misses it (e.g. it sits under a gitignored ancestor directory). It still gets
+        // a schema if a config governs its directory; otherwise it falls back to plain key/value editing.
+        const fileIds =
+            activeFileId !== "" && !scan.envFileIds.includes(activeFileId) ? [...scan.envFileIds, activeFileId].sort() : scan.envFileIds;
+        const association = associateConfigs(fileIds, scan.configIds, scan.packageRootIds);
         const cache = new Map<string, DescriptorResult>();
 
         const files: FileInput[] = [];
-        for (const fileId of scan.envFileIds) {
+        for (const fileId of fileIds) {
             files.push(await this.buildFileInput(folder, fileId, association.get(fileId), cache));
         }
         const landscape = buildLandscape({ files, activeFileId });
