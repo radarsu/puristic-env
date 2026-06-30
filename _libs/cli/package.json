@@ -62,6 +62,9 @@
         "@stricli/core": "catalog:",
         "tslib": "catalog:"
     },
+    "peerDependencies": {
+        "zod": "4"
+    },
     "devDependencies": {
         "@puristic/tsconfig": "workspace:*",
         "typescript": "catalog:",

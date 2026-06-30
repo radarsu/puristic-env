@@ -7,7 +7,7 @@
 ## Install
 
 ```sh
-pnpm add @puristic/env   # or: npm i @puristic/env
+pnpm add @puristic/env zod   # or: npm i @puristic/env zod
 ```
 
 Requires **Node 24+** and `zod` v4.

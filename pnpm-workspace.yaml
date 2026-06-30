@@ -8,21 +8,21 @@ allowBuilds:
 
 catalog:
   '@biomejs/biome': 2.4.16
-  '@noble/post-quantum': 0.6.1
+  '@noble/post-quantum': ^0.6.1
   '@semantic-release/exec': 7.1.0
   '@semantic-release/github': 12.0.8
-  '@stricli/core': 1.2.7
+  '@stricli/core': ^1.2.7
   '@types/node': 25.5.2
   '@vscode/vsce': 3.9.1
   esbuild: 0.28.0
   knip: 6.2.0
   semantic-release: 25.0.3
-  tslib: 2.8.1
+  tslib: ^2.8.1
   turbo: 2.9.16
   type-fest: 5.4.4
   typescript: 5.9.3
   vitest: 3.2.4
-  zod: 4.3.6
+  zod: '4'
 
 injectWorkspacePackages: true
 

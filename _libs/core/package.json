@@ -56,13 +56,16 @@
     },
     "dependencies": {
         "@noble/post-quantum": "catalog:",
-        "tslib": "catalog:",
-        "zod": "catalog:"
+        "tslib": "catalog:"
+    },
+    "peerDependencies": {
+        "zod": "4"
     },
     "devDependencies": {
         "@puristic/tsconfig": "workspace:*",
         "type-fest": "catalog:",
         "typescript": "catalog:",
-        "vitest": "catalog:"
+        "vitest": "catalog:",
+        "zod": "catalog:"
     }
 }

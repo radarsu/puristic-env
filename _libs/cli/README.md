@@ -7,10 +7,10 @@ For each `.env` file, `purenv` reads the `env.config.*` that governs it — the 
 ## Install
 
 ```sh
-pnpm add -D @puristic/env-cli   # or run ad-hoc: npx @puristic/env-cli validate
+pnpm add -D @puristic/env-cli zod   # or run ad-hoc: npx @puristic/env-cli validate
 ```
 
-Requires **Node 24+** (it evaluates your TypeScript `env.config.*` via native type-stripping).
+Requires **Node 24+** and `zod` v4 (it evaluates your TypeScript `env.config.*` via native type-stripping).
 
 ## Commands
 
