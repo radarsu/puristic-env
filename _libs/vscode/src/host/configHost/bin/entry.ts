@@ -11,6 +11,7 @@ interface CoreApi {
     inspectSchema: (schema: unknown) => unknown;
     validateValues: (schema: unknown, values: Record<string, string>) => unknown;
     extractDefinition: (module: Record<string, unknown>) => Definition;
+    NotAnEnvConfigError: new (message?: string) => Error;
 }
 
 interface Definition {
@@ -18,6 +19,7 @@ interface Definition {
 }
 
 const configPath = process.argv[2];
+let core: CoreApi | undefined;
 let loaded: { core: CoreApi; definition: Definition } | undefined;
 
 process.on("message", (raw: ConfigHostRequest) => {
@@ -31,11 +33,14 @@ async function handle(request: ConfigHostRequest): Promise<ConfigHostResponse> {
         if (request.op === "ping") {
             return { id: request.id, ok: true, op: "ping" };
         }
-        const { core, definition } = await load();
-        if (request.op === "introspect") {
-            return { id: request.id, ok: true, op: "introspect", descriptors: core.inspectSchema(definition.schema) as never };
+        if (request.op === "detect") {
+            return { id: request.id, ok: true, op: "detect", isEnv: await detect() };
         }
-        return { id: request.id, ok: true, op: "validate", report: core.validateValues(definition.schema, request.values) as never };
+        const { core: api, definition } = await load();
+        if (request.op === "introspect") {
+            return { id: request.id, ok: true, op: "introspect", descriptors: api.inspectSchema(definition.schema) as never };
+        }
+        return { id: request.id, ok: true, op: "validate", report: api.validateValues(definition.schema, request.values) as never };
     } catch (cause) {
         const error = cause as Error & { code?: string };
         return {
@@ -47,18 +52,40 @@ async function handle(request: ConfigHostRequest): Promise<ConfigHostResponse> {
     }
 }
 
-async function load(): Promise<{ core: CoreApi; definition: Definition }> {
-    if (loaded !== undefined) {
-        return loaded;
+// True if this file is an env config. A module that loads but exports no schema is not one
+// (NotAnEnvConfigError) — a silent skip; any other failure (syntax error, throwing import) propagates.
+async function detect(): Promise<boolean> {
+    const api = await loadCore();
+    try {
+        await load();
+        return true;
+    } catch (cause) {
+        if (cause instanceof api.NotAnEnvConfigError) {
+            return false;
+        }
+        throw cause;
+    }
+}
+
+async function loadCore(): Promise<CoreApi> {
+    if (core !== undefined) {
+        return core;
     }
     if (configPath === undefined) {
         throw new Error("config-host: no config path provided");
     }
-    const configUrl = pathToFileURL(configPath);
-    const require = createRequire(configUrl);
+    const require = createRequire(pathToFileURL(configPath));
     const coreUrl = pathToFileURL(require.resolve("@puristic/env/index.js")).href;
-    const core = (await import(coreUrl)) as unknown as CoreApi;
-    const module = (await import(configUrl.href)) as Record<string, unknown>;
-    loaded = { core, definition: core.extractDefinition(module) };
+    core = (await import(coreUrl)) as unknown as CoreApi;
+    return core;
+}
+
+async function load(): Promise<{ core: CoreApi; definition: Definition }> {
+    if (loaded !== undefined) {
+        return loaded;
+    }
+    const api = await loadCore();
+    const module = (await import(pathToFileURL(configPath as string).href)) as Record<string, unknown>;
+    loaded = { core: api, definition: api.extractDefinition(module) };
     return loaded;
 }

@@ -1,6 +1,34 @@
-import { baseName, classify, isEnvelope, type LeafDescriptorPublic, type ValidationReport, type VarStatus } from "@puristic/env/index.js";
+import {
+    attributeConfigs,
+    baseName,
+    classify,
+    isEnvelope,
+    type LeafDescriptorPublic,
+    mergeValidationReports,
+    type ValidationReport,
+    type VarStatus,
+} from "@puristic/env/index.js";
 import { FORMAT_META } from "../../shared/formats.js";
-import type { BadgeStatus, ControlType, DirView, FileView, Landscape, MatrixColumn, MatrixRow, MatrixSection, VarRow } from "../../shared/protocol.js";
+import type {
+    BadgeStatus,
+    ControlType,
+    DirView,
+    FileView,
+    Landscape,
+    MatrixColumn,
+    MatrixRow,
+    MatrixSection,
+    VarRow,
+} from "../../shared/protocol.js";
+
+// One env config governing a file: its own introspected leaves and their validation against the file.
+// A file with more than one (a shared root .env) is validated against the union of them.
+export interface ConfigInput {
+    configId: string;
+    app: string;
+    descriptors: LeafDescriptorPublic[];
+    validation: ValidationReport;
+}
 
 export interface FileInput {
     fileId: string;
@@ -9,9 +37,7 @@ export interface FileInput {
     dirty: boolean;
     text: string;
     entries: { key: string; value: string }[];
-    configId?: string;
-    descriptors?: LeafDescriptorPublic[];
-    validation?: ValidationReport;
+    configs?: ConfigInput[];
     configError?: string;
 }
 
@@ -51,7 +77,7 @@ function buildFileView(file: FileInput): FileView {
         entryMap.set(entry.key, entry.value);
     }
 
-    if (file.descriptors === undefined) {
+    if (file.configs === undefined || file.configs.length === 0) {
         const rows = file.entries.map((entry) => plainRow(entry.key, entry.value));
         const badge: BadgeStatus = file.configError !== undefined ? "error" : "none";
         const base: FileView = {
@@ -70,23 +96,27 @@ function buildFileView(file: FileInput): FileView {
         return file.configError !== undefined ? { ...base, configError: file.configError } : base;
     }
 
-    const validationByEnv = new Map((file.validation?.leaves ?? []).map((leaf) => [leaf.envName, leaf]));
-    const knownEnvNames = new Set(file.descriptors.map((descriptor) => descriptor.envName));
+    const attribution = attributeConfigs(
+        file.configs.map((config) => ({ configId: config.configId, app: config.app, descriptors: config.descriptors })),
+    );
+    const validation = mergeValidationReports(file.configs.map((config) => config.validation));
+    const validationByEnv = new Map(validation.leaves.map((leaf) => [leaf.envName, leaf]));
+    const knownEnvNames = new Set(attribution.descriptors.map((descriptor) => descriptor.envName));
     const rows: VarRow[] = [];
     let missingRequired = 0;
     let invalid = 0;
 
-    for (const descriptor of file.descriptors) {
+    for (const descriptor of attribution.descriptors) {
         const rawValue = entryMap.get(descriptor.envName);
         const present = rawValue !== undefined && rawValue !== "";
         const encrypted = rawValue !== undefined && isEnvelope(rawValue);
-        const validation = descriptor.secret ? undefined : validationByEnv.get(descriptor.envName);
+        const leaf = descriptor.secret ? undefined : validationByEnv.get(descriptor.envName);
         const result = classify({
             descriptor,
             present,
             isEncrypted: encrypted,
-            validationOk: validation?.ok,
-            validationMessage: validation?.message,
+            validationOk: leaf?.ok,
+            validationMessage: leaf?.message,
         });
         if (result.status === "missing-required") {
             missingRequired++;
@@ -94,7 +124,9 @@ function buildFileView(file: FileInput): FileView {
         if (result.status === "invalid") {
             invalid++;
         }
-        rows.push(buildVarRow(descriptor, rawValue, present, encrypted, result.status, result.message));
+        rows.push(
+            buildVarRow(descriptor, rawValue, present, encrypted, result.status, result.message, attribution.appsByEnv.get(descriptor.envName)),
+        );
     }
 
     let unknown = 0;
@@ -103,12 +135,11 @@ function buildFileView(file: FileInput): FileView {
             continue;
         }
         unknown++;
-        rows.push(plainRow(entry.key, entry.value, "unknown", "Not defined in the schema"));
+        rows.push(plainRow(entry.key, entry.value, "unknown", "Not defined in any schema"));
     }
 
-    const hasFormError = file.validation?.formError !== undefined;
-    const badge = computeBadge(rows, hasFormError);
-    return {
+    const badge = computeBadge(rows, validation.formError !== undefined);
+    const view: FileView = {
         fileId: file.fileId,
         fileName: file.fileName,
         dirId: file.dirId,
@@ -120,7 +151,17 @@ function buildFileView(file: FileInput): FileView {
         invalid,
         unknown,
         badge,
+        apps: [...new Set(file.configs.map((config) => config.app))],
+        perConfig: file.configs.map((config) => ({
+            app: config.app,
+            configId: config.configId,
+            envNames: config.descriptors.map((descriptor) => descriptor.envName),
+        })),
     };
+    if (attribution.conflicts.length > 0) {
+        view.conflicts = attribution.conflicts;
+    }
+    return view;
 }
 
 function buildVarRow(
@@ -130,6 +171,7 @@ function buildVarRow(
     isEncrypted: boolean,
     status: VarStatus,
     message: string | undefined,
+    apps: string[] | undefined,
 ): VarRow {
     const hint = deriveControl(descriptor);
     const row: VarRow = {
@@ -179,6 +221,12 @@ function buildVarRow(
     if (message !== undefined) {
         row.message = message;
     }
+    if (apps !== undefined) {
+        row.apps = apps;
+        if (apps.length > 1) {
+            row.shared = true;
+        }
+    }
     return row;
 }
 
@@ -209,7 +257,9 @@ function typeLabel(descriptor: LeafDescriptorPublic): string {
         return descriptor.type;
     }
     const labels = descriptor.constraints.map((constraint) =>
-        constraint.kind === "format" && typeof constraint.value === "string" ? (FORMAT_META[constraint.value]?.label ?? constraint.label) : constraint.label,
+        constraint.kind === "format" && typeof constraint.value === "string"
+            ? (FORMAT_META[constraint.value]?.label ?? constraint.label)
+            : constraint.label,
     );
     return `${descriptor.type} (${labels.join(", ")})`;
 }
@@ -272,26 +322,29 @@ function computeBadge(rows: VarRow[], hasFormError: boolean): BadgeStatus {
 
 function buildDirs(inputs: FileInput[], files: Record<string, FileView>): DirView[] {
     const order: string[] = [];
-    const byDir = new Map<string, { fileIds: string[]; configId: string | undefined }>();
+    const byDir = new Map<string, { fileIds: string[]; configIds: Set<string> }>();
     for (const file of inputs) {
-        const group = byDir.get(file.dirId);
+        let group = byDir.get(file.dirId);
         if (group === undefined) {
-            byDir.set(file.dirId, { fileIds: [file.fileId], configId: file.configId });
+            group = { fileIds: [], configIds: new Set() };
+            byDir.set(file.dirId, group);
             order.push(file.dirId);
-            continue;
         }
         group.fileIds.push(file.fileId);
+        for (const config of file.configs ?? []) {
+            group.configIds.add(config.configId);
+        }
     }
     return order.map((dirId) => {
-        const group = byDir.get(dirId) ?? { fileIds: [], configId: undefined };
+        const group = byDir.get(dirId) ?? { fileIds: [], configIds: new Set<string>() };
         const dir: DirView = {
             dirId,
             label: dirId === "" ? "(workspace root)" : baseName(dirId),
             fileIds: group.fileIds,
             badge: worstBadge(group.fileIds.map((fileId) => files[fileId]?.badge ?? "none")),
         };
-        if (group.configId !== undefined) {
-            dir.configPath = group.configId;
+        if (group.configIds.size > 0) {
+            dir.configPaths = [...group.configIds];
         }
         return dir;
     });
@@ -310,31 +363,37 @@ function worstBadge(badges: BadgeStatus[]): BadgeStatus {
     return "none";
 }
 
+// One section per env config (an "app"). A file appears in a section's column only when that config
+// governs it, so a shared root .env shows up under every app, each listing only that app's variables.
 function buildMatrix(inputs: FileInput[], columns: MatrixColumn[], statusByFile: Map<string, Map<string, VarStatus>>): MatrixSection[] {
-    const serviceOrder: string[] = [];
-    const byService = new Map<string, FileInput>();
+    const order: string[] = [];
+    const byConfig = new Map<string, { app: string; descriptors: LeafDescriptorPublic[] }>();
+    const fileConfigs = new Map<string, Set<string>>();
     for (const file of inputs) {
-        if (file.descriptors === undefined || file.configId === undefined) {
+        if (file.configs === undefined) {
             continue;
         }
-        if (!byService.has(file.configId)) {
-            byService.set(file.configId, file);
-            serviceOrder.push(file.configId);
+        fileConfigs.set(file.fileId, new Set(file.configs.map((config) => config.configId)));
+        for (const config of file.configs) {
+            if (!byConfig.has(config.configId)) {
+                byConfig.set(config.configId, { app: config.app, descriptors: config.descriptors });
+                order.push(config.configId);
+            }
         }
     }
 
-    const fileService = new Map(inputs.filter((file) => file.configId !== undefined).map((file) => [file.fileId, file.configId]));
-
-    return serviceOrder.map((service) => {
-        const representative = byService.get(service)!;
-        const rows: MatrixRow[] = (representative.descriptors ?? []).map((descriptor) => {
+    return order.map((configId) => {
+        const service = byConfig.get(configId)!;
+        const rows: MatrixRow[] = service.descriptors.map((descriptor) => {
             const cells: Record<string, VarStatus | "n/a"> = {};
             for (const column of columns) {
                 cells[column.fileId] =
-                    fileService.get(column.fileId) === service ? (statusByFile.get(column.fileId)?.get(descriptor.envName) ?? "n/a") : "n/a";
+                    fileConfigs.get(column.fileId)?.has(configId) === true
+                        ? (statusByFile.get(column.fileId)?.get(descriptor.envName) ?? "n/a")
+                        : "n/a";
             }
             return { envName: descriptor.envName, group: descriptor.path.slice(0, -1).join("."), cells };
         });
-        return { service, rows };
+        return { service: configId, app: service.app, rows };
     });
 }

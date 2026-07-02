@@ -63,12 +63,12 @@ export class EnvEditorProvider implements vscode.CustomTextEditorProvider {
             }),
         );
 
-        const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, "**/{.env*,env.config.*}"));
+        const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, "**/{.env*,*config.*}"));
         const onFsEvent = async (uri: vscode.Uri): Promise<void> => {
             if ((await filterGitignored(folder, [uri])).length === 0) {
                 return;
             }
-            if (uri.path.includes("env.config.")) {
+            if (/config\.(c|m)?[jt]s$/.test(uri.path)) {
                 this.manager.restart(uri.fsPath);
             }
             refresh();

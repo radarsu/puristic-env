@@ -9,12 +9,14 @@ export interface WorkspaceScan {
     configIds: string[];
     packageRootIds: string[];
     manifests: PackageManifest[];
+    // Package-root dir -> its manifest, for resolving a config's app label (package.json "name").
+    manifestByDir: Map<string, PackageManifest>;
 }
 
 export async function scanWorkspace(folder: vscode.WorkspaceFolder): Promise<WorkspaceScan> {
     const config = vscode.workspace.getConfiguration("puristic");
     const envGlob = config.get<string>("envFileGlob") ?? "**/.env*";
-    const configGlob = config.get<string>("configFileGlob") ?? "**/env.config.{ts,mts,cts,js,mjs,cjs}";
+    const configGlob = config.get<string>("configFileGlob") ?? "**/*config.{ts,mts,cts,js,mjs,cjs}";
     const exclude = excludePattern(config.get<string[]>("exclude") ?? []);
 
     const [envUris, configUris, packageUris] = await Promise.all([
@@ -28,12 +30,21 @@ export async function scanWorkspace(folder: vscode.WorkspaceFolder): Promise<Wor
     const packageRootIds = packageUris.map((uri) => dirOf(relativeId(folder, uri))).sort();
     const manifests = await Promise.all(packageUris.map((uri) => readManifest(uri)));
 
+    const manifestByDir = new Map<string, PackageManifest>();
+    packageUris.forEach((uri, index) => {
+        const manifest = manifests[index];
+        if (manifest !== undefined) {
+            manifestByDir.set(dirOf(relativeId(folder, uri)), manifest);
+        }
+    });
+
     return {
         folder,
         envFileIds,
         configIds,
         packageRootIds,
         manifests: manifests.filter((manifest): manifest is PackageManifest => manifest !== undefined),
+        manifestByDir,
     };
 }
 

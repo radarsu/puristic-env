@@ -34,6 +34,9 @@ export interface VarRow {
     decrypted?: string;
     status: VarStatus;
     message?: string;
+    // Apps (schemas) that declare this variable; shared is true when more than one does.
+    apps?: string[];
+    shared?: boolean;
 }
 
 export interface FileView {
@@ -50,12 +53,17 @@ export interface FileView {
     invalid: number;
     unknown: number;
     badge: BadgeStatus;
+    // Apps whose schemas govern this file (>1 for a shared root .env), with each app's variables and
+    // any variable whose definition conflicts between apps.
+    apps?: string[];
+    perConfig?: { app: string; configId: string; envNames: string[] }[];
+    conflicts?: { envName: string; apps: string[] }[];
 }
 
 export interface DirView {
     dirId: string;
     label: string;
-    configPath?: string;
+    configPaths?: string[];
     fileIds: string[];
     badge: BadgeStatus;
 }
@@ -74,6 +82,7 @@ export interface MatrixRow {
 
 export interface MatrixSection {
     service: string;
+    app?: string;
     rows: MatrixRow[];
 }
 

@@ -486,6 +486,26 @@ button {
     color: var(--muted);
 }
 
+/* "Shared by api, web" badge on a variable declared by more than one app's schema. */
+.var-apps {
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--vscode-badge-background, rgba(127, 127, 127, 0.18));
+    border-radius: 4px;
+    padding: 0 5px;
+    margin-left: 2px;
+}
+
+/* App set on a sidebar file that a shared root .env spans. */
+.file-apps {
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .cell-value {
     display: flex;
     flex-direction: column;

@@ -27,6 +27,17 @@ export class ConfigHostClient {
 
     constructor(private readonly options: ConfigHostOptions) {}
 
+    async detect(): Promise<boolean> {
+        const response = await this.request({ id: this.nextId++, op: "detect" });
+        if (!response.ok) {
+            throw new Error(response.error.message);
+        }
+        if (response.op !== "detect") {
+            throw new Error(`config-host: unexpected response op ${response.op}`);
+        }
+        return response.isEnv;
+    }
+
     async introspect(): Promise<LeafDescriptorPublic[]> {
         const response = await this.request({ id: this.nextId++, op: "introspect" });
         if (!response.ok) {

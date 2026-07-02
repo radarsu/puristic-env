@@ -73,7 +73,7 @@ describe("resolveRunEnv", () => {
         const warnings: string[] = [];
         const env = await resolveRunEnv({ cwd: dir, ambient: {}, defaults: true, onWarn: (message) => warnings.push(message) });
         expect(env).toEqual({ A: "1" });
-        expect(warnings[0]).toContain("no env.config.*");
+        expect(warnings[0]).toContain("no env config found");
     });
 });
 

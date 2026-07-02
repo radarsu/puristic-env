@@ -25,7 +25,10 @@ function renderSection(section: MatrixSection, columns: MatrixColumn[], filter: 
         return h("tr", {}, [h("th", { class: "matrix-key", title: row.envName, text: row.envName }), ...cells]);
     });
     const table = h("table", { class: "matrix" }, [h("thead", {}, [head]), h("tbody", {}, body)]);
-    return h("section", { class: "matrix-section" }, [h("h3", { class: "matrix-service", title: section.service, text: section.service }), table]);
+    return h("section", { class: "matrix-section" }, [
+        h("h3", { class: "matrix-service", title: section.service, text: section.app ?? section.service }),
+        table,
+    ]);
 }
 
 function renderColumnHeader(column: MatrixColumn): HTMLElement {

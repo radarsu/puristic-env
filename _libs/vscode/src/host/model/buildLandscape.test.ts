@@ -1,8 +1,9 @@
 import { inspectSchema, validateValues } from "@puristic/env/index.js";
 import { describe, expect, it } from "vitest";
+import type { ZodType } from "zod";
 import { z } from "zod";
 import type { FileView, VarRow } from "../../shared/protocol.js";
-import { buildLandscape, type FileInput } from "./buildLandscape.js";
+import { buildLandscape, type ConfigInput, type FileInput } from "./buildLandscape.js";
 
 const schema = z.object({
     nodeEnv: z.string(),
@@ -10,7 +11,9 @@ const schema = z.object({
     database: z.object({ url: z.url().meta({ secret: true }) }),
 });
 
-const descriptors = inspectSchema(schema);
+function config(configId: string, app: string, schema: ZodType, values: Record<string, string>): ConfigInput {
+    return { configId, app, descriptors: inspectSchema(schema), validation: validateValues(schema, values) };
+}
 
 function file(fileId: string, values: Record<string, string>, overrides: Partial<FileInput> = {}): FileInput {
     return {
@@ -20,9 +23,7 @@ function file(fileId: string, values: Record<string, string>, overrides: Partial
         dirty: false,
         text: "",
         entries: Object.entries(values).map(([key, value]) => ({ key, value })),
-        configId: "apps/api/env.config.ts",
-        descriptors,
-        validation: validateValues(schema, values),
+        configs: [config("apps/api/env.config.ts", "api", schema, values)],
         ...overrides,
     };
 }
@@ -104,18 +105,60 @@ describe("buildLandscape", () => {
             dirty: false,
             text: "",
             entries: [],
-            configId: "apps/web/env.config.ts",
-            descriptors: inspectSchema(otherSchema),
-            validation: validateValues(otherSchema, {}),
+            configs: [config("apps/web/env.config.ts", "web", otherSchema, {})],
         };
         const landscape = buildLandscape({ files: [apiFile, otherFile], activeFileId: apiFile.fileId });
         expect(landscape.columns.map((column) => column.fileId)).toEqual(["apps/api/.env", "apps/web/.env"]);
         expect(landscape.matrix).toHaveLength(2);
 
         const apiSection = landscape.matrix.find((section) => section.service === "apps/api/env.config.ts")!;
+        expect(apiSection.app).toBe("api");
         const nodeEnvRow = apiSection.rows.find((entry) => entry.envName === "NODE_ENV")!;
         expect(nodeEnvRow.cells["apps/api/.env"]).toBe("ok");
         expect(nodeEnvRow.cells["apps/web/.env"]).toBe("n/a");
+    });
+
+    it("aggregates a shared root .env across apps: tags shared vars and builds per-app matrix sections", () => {
+        const apiSchema = z.object({ databaseUrl: z.string(), apiUrl: z.string() });
+        const webSchema = z.object({ apiUrl: z.string(), webOrigin: z.string() });
+        const values = { DATABASE_URL: "x", API_URL: "https://x", WEB_ORIGIN: "https://y" };
+        const input: FileInput = {
+            fileId: ".env",
+            fileName: ".env",
+            dirId: "",
+            dirty: false,
+            text: "",
+            entries: Object.entries(values).map(([key, value]) => ({ key, value })),
+            configs: [config("_apps/api/src/config.ts", "api", apiSchema, values), config("_apps/web/src/config.ts", "web", webSchema, values)],
+        };
+        const landscape = buildLandscape({ files: [input], activeFileId: ".env" });
+        const view = landscape.files[".env"]!;
+
+        expect(view.apps).toEqual(["api", "web"]);
+        expect(row(view, "API_URL").shared).toBe(true);
+        expect(row(view, "API_URL").apps).toEqual(["api", "web"]);
+        expect(row(view, "DATABASE_URL").apps).toEqual(["api"]);
+        expect(row(view, "DATABASE_URL").shared).toBeUndefined();
+        expect(view.badge).toBe("ok");
+
+        expect(landscape.matrix.map((section) => section.app)).toEqual(["api", "web"]);
+        const webSection = landscape.matrix.find((section) => section.app === "web")!;
+        expect(webSection.rows.map((entry) => entry.envName)).toEqual(["API_URL", "WEB_ORIGIN"]);
+        expect(webSection.rows.find((entry) => entry.envName === "API_URL")!.cells[".env"]).toBe("ok");
+    });
+
+    it("flags a variable defined incompatibly across apps", () => {
+        const input: FileInput = {
+            fileId: ".env",
+            fileName: ".env",
+            dirId: "",
+            dirty: false,
+            text: "",
+            entries: [],
+            configs: [config("a", "api", z.object({ port: z.coerce.number() }), {}), config("b", "web", z.object({ port: z.string() }), {})],
+        };
+        const view = buildLandscape({ files: [input], activeFileId: ".env" }).files[".env"]!;
+        expect(view.conflicts).toEqual([{ envName: "PORT", apps: ["api", "web"] }]);
     });
 
     it("derives input controls and validation attributes from the schema", () => {
@@ -134,9 +177,7 @@ describe("buildLandscape", () => {
             dirty: false,
             text: "",
             entries: [],
-            configId: "svc/env.config.ts",
-            descriptors: inspectSchema(controlSchema),
-            validation: validateValues(controlSchema, {}),
+            configs: [config("svc/env.config.ts", "svc", controlSchema, {})],
         };
         const view = buildLandscape({ files: [input], activeFileId: input.fileId }).files["svc/.env"]!;
 

@@ -19,6 +19,11 @@ export function loadConfig<S extends z.ZodType>(definition: ConfigDefinition<S>)
     return createConfig(definition).load();
 }
 
+// A loadable module that simply isn't an env config (e.g. vite.config.ts). Discovery scans any
+// *config.* file and loads it; this discriminates "not an env config, skip silently" from a genuine
+// config error (syntax error, throwing import), which must surface.
+export class NotAnEnvConfigError extends Error {}
+
 // Extract a ConfigDefinition from an imported env.config.* module via the export
 // convention: a `default`/`config`/`definition` export carrying a `schema`, or a bare `schema`
 // export. The extension's config-host and the CLI both rely on this single implementation.
@@ -34,7 +39,7 @@ export function extractDefinition(module: Record<string, unknown>): ConfigDefini
     if (isZodSchema(bare)) {
         return { schema: bare, sources: [] };
     }
-    throw new Error(
+    throw new NotAnEnvConfigError(
         "env.config must export a ConfigDefinition (default, `config`, or `definition`) with a `schema`, or a bare zod `schema` export.",
     );
 }

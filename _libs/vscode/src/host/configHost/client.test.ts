@@ -22,6 +22,23 @@ describe("ConfigHostClient", () => {
         client = undefined;
     });
 
+    it("detects the fixture as an env config", async () => {
+        client = makeClient();
+        expect(await client.detect()).toBe(true);
+    });
+
+    it("detects a non-env config (vite) and reports it is not one", async () => {
+        const notEnvDir = join(here, "..", "..", "..", "fixtures", "notenv");
+        client = new ConfigHostClient({
+            entryPath,
+            configPath: join(notEnvDir, "vite.config.ts"),
+            projectRoot: notEnvDir,
+            nodePath: process.execPath,
+            timeoutMs: 15000,
+        });
+        expect(await client.detect()).toBe(false);
+    });
+
     it("introspects the fixture config into env descriptors", async () => {
         client = makeClient();
         const descriptors = await client.introspect();

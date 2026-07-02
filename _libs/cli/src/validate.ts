@@ -1,21 +1,19 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { relative, resolve } from "node:path";
 import {
+    attributeConfigs,
     classify,
-    inspectSchema,
     isEnvelope,
     type LeafDescriptorPublic,
     listEntries,
-    loadDefinition,
+    mergeValidationReports,
     parseEnv,
     type ValidationReport,
     type VarStatus,
     validateValues,
 } from "@puristic/env/index.js";
-import { findGoverningConfig } from "./discoverConfig.js";
+import { type ConfigError, loadWorkspace, type Workspace } from "./workspace.js";
 
-const EXCLUDED_DIRS = new Set(["node_modules", "dist", ".cache", ".turbo", ".git"]);
-const TEMPLATE_NAMES = new Set([".env.example", ".env.sample", ".env.template"]);
 const ERROR_STATUSES = new Set<VarStatus>(["missing-required", "invalid", "secret-plaintext"]);
 
 export interface ValidateOptions {
@@ -29,14 +27,16 @@ export interface ValidateRow {
     envName: string;
     status: VarStatus;
     message?: string;
+    // Apps whose schema declares this variable; shared is true when more than one does.
+    apps?: string[];
+    shared?: boolean;
 }
 
 export interface ValidateFileResult {
     path: string;
-    configPath?: string;
+    configPaths: string[];
     rows: ValidateRow[];
     formError?: string;
-    configError?: string;
     errorCount: number;
     warningCount: number;
 }
@@ -44,53 +44,51 @@ export interface ValidateFileResult {
 export interface ValidateResult {
     ok: boolean;
     files: ValidateFileResult[];
+    configErrors: ConfigError[];
     errorCount: number;
     warningCount: number;
 }
 
-type ConfigSchema = Awaited<ReturnType<typeof loadDefinition>>["schema"];
-type LoadedConfig = { schema: ConfigSchema; descriptors: LeafDescriptorPublic[] } | { error: string };
-
 export async function validate(options: ValidateOptions): Promise<ValidateResult> {
     const cwd = options.cwd ?? process.cwd();
-    const envPaths = options.envFiles.length > 0 ? unique(options.envFiles.map((file) => resolve(cwd, file))) : findEnvFiles(cwd);
-    const override = options.configPath !== undefined ? resolve(cwd, options.configPath) : undefined;
+    const workspace = await loadWorkspace(cwd, options.configPath);
+    const envPaths = options.envFiles.length > 0 ? unique(options.envFiles.map((file) => resolve(cwd, file))) : workspace.envPaths;
 
-    const cache = new Map<string, LoadedConfig>();
-    const files: ValidateFileResult[] = [];
-    for (const envPath of envPaths) {
-        const configPath = override ?? findGoverningConfig(dirname(envPath));
-        if (configPath === undefined) {
-            files.push({ path: relative(cwd, envPath), rows: [], errorCount: 0, warningCount: 0 });
-            continue;
-        }
-        const loaded = await loadConfig(configPath, cache);
-        if ("error" in loaded) {
-            files.push({
-                path: relative(cwd, envPath),
-                configPath: relative(cwd, configPath),
-                rows: [],
-                configError: loaded.error,
-                errorCount: 1,
-                warningCount: 0,
-            });
-            continue;
-        }
-        files.push(validateFile(cwd, envPath, configPath, loaded, options.strict));
-    }
+    const files = envPaths.map((envPath) => validateEnv(cwd, envPath, workspace, options.strict));
 
     const errorCount = files.reduce((sum, file) => sum + file.errorCount, 0);
-    const warningCount = files.reduce((sum, file) => sum + file.warningCount, 0);
-    return { ok: errorCount === 0, files, errorCount, warningCount };
+    const warningCount = files.reduce((sum, file) => sum + file.warningCount, 0) + workspace.configErrors.length;
+    return { ok: errorCount === 0, files, configErrors: workspace.configErrors, errorCount, warningCount };
 }
 
-// Classify every variable in a file against its schema — the same taxonomy the VSCode editor uses
-// (secret leaves skip value validation; unknown keys are warnings unless --strict).
+function validateEnv(cwd: string, envPath: string, workspace: Workspace, strict: boolean): ValidateFileResult {
+    const configs = workspace.configsFor(envPath);
+    const configPaths = configs.map((config) => relative(cwd, config.path));
+    if (configs.length === 0) {
+        return { path: relative(cwd, envPath), configPaths, rows: [], errorCount: 0, warningCount: 0 };
+    }
+
+    const raw = readRawEnv(envPath);
+    const attribution = attributeConfigs(configs.map((config) => ({ configId: config.configId, app: config.app, descriptors: config.descriptors })));
+    const report = mergeValidationReports(configs.map((config) => validateValues(config.schema, raw)));
+    const { rows, errorCount, warningCount } = classifyEnv(attribution.descriptors, raw, report, strict, attribution.appsByEnv);
+    const result: ValidateFileResult = { path: relative(cwd, envPath), configPaths, rows, errorCount, warningCount };
+    if (report.formError !== undefined) {
+        result.formError = report.formError;
+        result.errorCount++;
+    }
+    return result;
+}
+
+// Classify every variable in a file against the union of its schemas — the same taxonomy the VSCode
+// editor uses (secret leaves skip value validation; unknown keys are warnings unless --strict). Each
+// known row is tagged with the app(s) that declare it, so shared variables surface their owners.
 export function classifyEnv(
     descriptors: LeafDescriptorPublic[],
     raw: Record<string, string>,
     report: ValidationReport,
     strict: boolean,
+    appsByEnv: Map<string, string[]>,
 ): { rows: ValidateRow[]; errorCount: number; warningCount: number } {
     const validationByEnv = new Map(report.leaves.map((leaf) => [leaf.envName, leaf]));
     const knownEnvNames = new Set(descriptors.map((descriptor) => descriptor.envName));
@@ -109,11 +107,18 @@ export function classifyEnv(
             validationOk: validation?.ok,
             validationMessage: validation?.message,
         });
-        rows.push(
-            result.message === undefined
-                ? { envName: descriptor.envName, status: result.status }
-                : { envName: descriptor.envName, status: result.status, message: result.message },
-        );
+        const row: ValidateRow = { envName: descriptor.envName, status: result.status };
+        if (result.message !== undefined) {
+            row.message = result.message;
+        }
+        const apps = appsByEnv.get(descriptor.envName);
+        if (apps !== undefined) {
+            row.apps = apps;
+            if (apps.length > 1) {
+                row.shared = true;
+            }
+        }
+        rows.push(row);
         if (ERROR_STATUSES.has(result.status)) {
             errorCount++;
         }
@@ -123,7 +128,7 @@ export function classifyEnv(
         if (knownEnvNames.has(key)) {
             continue;
         }
-        rows.push({ envName: key, status: "unknown", message: "Not defined in the schema" });
+        rows.push({ envName: key, status: "unknown", message: "Not defined in any schema" });
         if (strict) {
             errorCount++;
         } else {
@@ -132,40 +137,6 @@ export function classifyEnv(
     }
 
     return { rows, errorCount, warningCount };
-}
-
-function validateFile(
-    cwd: string,
-    envPath: string,
-    configPath: string,
-    loaded: { schema: ConfigSchema; descriptors: LeafDescriptorPublic[] },
-    strict: boolean,
-): ValidateFileResult {
-    const raw = readRawEnv(envPath);
-    const report = validateValues(loaded.schema, raw);
-    const { rows, errorCount, warningCount } = classifyEnv(loaded.descriptors, raw, report, strict);
-    const result: ValidateFileResult = { path: relative(cwd, envPath), configPath: relative(cwd, configPath), rows, errorCount, warningCount };
-    if (report.formError !== undefined) {
-        result.formError = report.formError;
-        result.errorCount++;
-    }
-    return result;
-}
-
-async function loadConfig(configPath: string, cache: Map<string, LoadedConfig>): Promise<LoadedConfig> {
-    const cached = cache.get(configPath);
-    if (cached !== undefined) {
-        return cached;
-    }
-    let result: LoadedConfig;
-    try {
-        const definition = await loadDefinition(configPath);
-        result = { schema: definition.schema, descriptors: inspectSchema(definition.schema) };
-    } catch (cause) {
-        result = { error: (cause as Error).message };
-    }
-    cache.set(configPath, result);
-    return result;
 }
 
 function readRawEnv(envPath: string): Record<string, string> {
@@ -177,29 +148,6 @@ function readRawEnv(envPath: string): Record<string, string> {
         raw[entry.key] = entry.value;
     }
     return raw;
-}
-
-function findEnvFiles(dir: string): string[] {
-    const result: string[] = [];
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        if (entry.isDirectory()) {
-            if (!EXCLUDED_DIRS.has(entry.name)) {
-                result.push(...findEnvFiles(join(dir, entry.name)));
-            }
-            continue;
-        }
-        if (entry.isFile() && isEnvFileName(entry.name)) {
-            result.push(join(dir, entry.name));
-        }
-    }
-    return result.sort();
-}
-
-function isEnvFileName(name: string): boolean {
-    if (TEMPLATE_NAMES.has(name)) {
-        return false;
-    }
-    return name === ".env" || name.startsWith(".env.");
 }
 
 function unique(values: string[]): string[] {

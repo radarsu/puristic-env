@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
-import { generateDts, generateEnvExample, generateJsonSchema, inspectSchema, loadDefinition } from "@puristic/env/index.js";
-import { findGoverningConfig } from "./discoverConfig.js";
+import { basename, join, resolve } from "node:path";
+import { attributeConfigs, generateDts, generateEnvExample, generateJsonSchema } from "@puristic/env/index.js";
+import { type AppConfig, loadWorkspace } from "./workspace.js";
 
 export interface GenOptions {
     config?: string;
@@ -15,11 +15,17 @@ export interface GenOptions {
 
 export async function gen(options: GenOptions): Promise<{ written: string[] }> {
     const cwd = options.cwd ?? process.cwd();
-    const configPath = resolveConfigPath(options.config, cwd);
-    const outDir = options.out !== undefined ? resolve(cwd, options.out) : dirname(configPath);
-    const definition = await loadDefinition(configPath);
-    const descriptors = inspectSchema(definition.schema);
-    const source = basename(configPath);
+    const workspace = await loadWorkspace(cwd, options.config);
+    const configs = workspace.configsFor(join(cwd, ".env"));
+    if (configs.length === 0) {
+        throw new Error(`No env config found at or below ${cwd}. Pass --config <path>.`);
+    }
+
+    const outDir = options.out !== undefined ? resolve(cwd, options.out) : cwd;
+    const descriptors = attributeConfigs(
+        configs.map((config) => ({ configId: config.configId, app: config.app, descriptors: config.descriptors })),
+    ).descriptors;
+    const source = configs.map((config) => basename(config.path)).join(", ");
 
     const artifacts: { name: string; content: string }[] = [];
     if (options.types) {
@@ -29,7 +35,7 @@ export async function gen(options: GenOptions): Promise<{ written: string[] }> {
         artifacts.push({ name: ".env.example", content: generateEnvExample(descriptors, { source }) });
     }
     if (options.json) {
-        artifacts.push({ name: "purenv.schema.json", content: generateJsonSchema(definition.schema) });
+        artifacts.push(...jsonArtifacts(configs));
     }
 
     mkdirSync(outDir, { recursive: true });
@@ -43,15 +49,16 @@ export async function gen(options: GenOptions): Promise<{ written: string[] }> {
     return { written };
 }
 
-function resolveConfigPath(config: string | undefined, cwd: string): string {
-    if (config !== undefined) {
-        return resolve(cwd, config);
+// JSON Schema is per-schema (one zod object). A single config keeps purenv.schema.json; multiple app
+// configs get one file each, since their nested shapes can't be merged into one document.
+function jsonArtifacts(configs: AppConfig[]): { name: string; content: string }[] {
+    if (configs.length === 1) {
+        return [{ name: "purenv.schema.json", content: generateJsonSchema(configs[0]!.schema) }];
     }
-    const found = findGoverningConfig(cwd);
-    if (found === undefined) {
-        throw new Error(`No env.config.* found at or above ${cwd}. Pass --config <path>.`);
-    }
-    return found;
+    return configs.map((config) => ({
+        name: `purenv.${config.app.replace(/[^\w.-]+/g, "-")}.schema.json`,
+        content: generateJsonSchema(config.schema),
+    }));
 }
 
 // Don't clobber a hand-written file that happens to share a generated artifact's name. Files that

@@ -17,16 +17,14 @@ export function renderJson(result: ValidateResult): string {
 }
 
 export function renderHuman(result: ValidateResult): string {
-    if (result.files.length === 0) {
+    if (result.files.length === 0 && result.configErrors.length === 0) {
         return "No .env files found.\n";
     }
     const lines: string[] = [];
     for (const file of result.files) {
         lines.push("", header(file));
-        if (file.configError !== undefined) {
-            lines.push(`  config error: ${file.configError}`);
-        } else if (file.configPath === undefined) {
-            lines.push("  (no governing env.config.* — skipped)");
+        if (file.configPaths.length === 0) {
+            lines.push("  (no env config governs this file — skipped)");
         } else {
             for (const row of file.rows) {
                 lines.push(renderRow(row));
@@ -37,19 +35,23 @@ export function renderHuman(result: ValidateResult): string {
         }
         lines.push(`  ${summaryMark(file.errorCount, file.warningCount)}`);
     }
+    for (const configError of result.configErrors) {
+        lines.push("", `${configError.path}  (config failed to load)`, `  ${configError.error}`);
+    }
     lines.push("", totals(result));
     return `${lines.join("\n")}\n`;
 }
 
 function header(file: ValidateFileResult): string {
-    return file.configPath === undefined ? file.path : `${file.path}  (config: ${file.configPath})`;
+    return file.configPaths.length === 0 ? file.path : `${file.path}  (config: ${file.configPaths.join(", ")})`;
 }
 
 function renderRow(row: ValidateRow): string {
     const label = STATUS_LABEL[row.status].padEnd(10);
     const name = row.envName.padEnd(24);
+    const apps = row.shared === true && row.apps !== undefined ? `  [${row.apps.join(", ")}]` : "";
     const message = row.message === undefined ? "" : `  ${row.message}`;
-    return `  ${label} ${name}${message}`.trimEnd();
+    return `  ${label} ${name}${apps}${message}`.trimEnd();
 }
 
 function summaryMark(errorCount: number, warningCount: number): string {

@@ -2,6 +2,7 @@ import type { LeafDescriptorPublic, ValidationReport } from "@puristic/env/index
 
 export type ConfigHostRequest =
     | { id: number; op: "ping" }
+    | { id: number; op: "detect" }
     | { id: number; op: "introspect" }
     | { id: number; op: "validate"; values: Record<string, string> };
 
@@ -13,6 +14,7 @@ export interface ConfigHostError {
 
 export type ConfigHostResponse =
     | { id: number; ok: true; op: "ping" }
+    | { id: number; ok: true; op: "detect"; isEnv: boolean }
     | { id: number; ok: true; op: "introspect"; descriptors: LeafDescriptorPublic[] }
     | { id: number; ok: true; op: "validate"; report: ValidationReport }
     | { id: number; ok: false; op: string; error: ConfigHostError };

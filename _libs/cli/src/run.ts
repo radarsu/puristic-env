@@ -1,9 +1,9 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { constants } from "node:os";
-import { resolve } from "node:path";
-import { decrypt, expandEnv, inspectSchema, isEnvelope, listEntries, loadDefinition, parseEnv, resolvePrivateKey } from "@puristic/env/index.js";
-import { findGoverningConfig } from "./discoverConfig.js";
+import { join, resolve } from "node:path";
+import { attributeConfigs, decrypt, expandEnv, isEnvelope, listEntries, parseEnv, resolvePrivateKey } from "@puristic/env/index.js";
+import { loadWorkspace } from "./workspace.js";
 
 const DEFAULT_ENV_FILES = [".env", ".env.local"];
 
@@ -78,13 +78,16 @@ async function applyDefaults(
     configPath: string | undefined,
     onWarn?: (message: string) => void,
 ): Promise<void> {
-    const config = configPath !== undefined ? resolve(cwd, configPath) : findGoverningConfig(cwd);
-    if (config === undefined) {
-        onWarn?.("--defaults: no env.config.* found above the current directory; skipping schema defaults.");
+    const workspace = await loadWorkspace(cwd, configPath);
+    const configs = workspace.configsFor(join(cwd, ".env"));
+    if (configs.length === 0) {
+        onWarn?.("--defaults: no env config found at or below the current directory; skipping schema defaults.");
         return;
     }
-    const definition = await loadDefinition(config);
-    for (const descriptor of inspectSchema(definition.schema)) {
+    const descriptors = attributeConfigs(
+        configs.map((config) => ({ configId: config.configId, app: config.app, descriptors: config.descriptors })),
+    ).descriptors;
+    for (const descriptor of descriptors) {
         if (!descriptor.hasDefault || descriptor.default === undefined) {
             continue;
         }

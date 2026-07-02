@@ -16,8 +16,15 @@ export function renderGrid(state: AppState, file: FileView): HTMLElement {
         const note =
             file.configError !== undefined
                 ? `Config failed to load: ${file.configError}`
-                : "No env.config governs this directory — editing as plain key/value.";
+                : "No env config governs this file — editing as plain key/value.";
         container.append(h("div", { class: `notice ${file.configError !== undefined ? "notice-error" : "notice-info"}`, text: note }));
+    }
+
+    // A variable declared with an incompatible definition across the sharing apps: surface it up front.
+    for (const conflict of file.conflicts ?? []) {
+        container.append(
+            h("div", { class: "notice notice-error", text: `${conflict.envName} is defined differently by ${conflict.apps.join(", ")}` }),
+        );
     }
 
     const rows = file.rows.filter((row) => matchesFilter(row, state.filter));
@@ -60,7 +67,14 @@ function renderAddVariable(fileId: string): HTMLElement {
             placeholder: "NEW_KEY",
             spellcheck: "false",
         }),
-        h("input", { class: "value-input", type: "text", "data-action": "new-key-value", "data-file": fileId, placeholder: "value", spellcheck: "false" }),
+        h("input", {
+            class: "value-input",
+            type: "text",
+            "data-action": "new-key-value",
+            "data-file": fileId,
+            placeholder: "value",
+            spellcheck: "false",
+        }),
         h("button", { class: "btn", "data-action": "add-new", "data-file": fileId, title: "Add a new variable to this file" }, [icon("plus"), "Add"]),
     ]);
 }
@@ -106,7 +120,12 @@ function renderGridHeader(file: FileView): HTMLElement {
         file.dirty
             ? h(
                   "button",
-                  { class: "btn btn-ghost", "data-action": "discard", "data-file": file.fileId, title: "Revert unsaved changes to the last saved version" },
+                  {
+                      class: "btn btn-ghost",
+                      "data-action": "discard",
+                      "data-file": file.fileId,
+                      title: "Revert unsaved changes to the last saved version",
+                  },
                   ["Discard changes"],
               )
             : undefined,
@@ -121,6 +140,9 @@ function renderRow(state: AppState, fileId: string, row: VarRow): HTMLElement {
             row.required ? h("span", { class: "required", title: "required", text: " *" }) : undefined,
         ]),
         row.typeLabel === "" ? undefined : h("span", { class: "var-type", text: row.typeLabel }),
+        row.shared === true && row.apps !== undefined
+            ? h("span", { class: "var-apps", title: `Shared by ${row.apps.join(", ")}`, text: row.apps.join(", ") })
+            : undefined,
     ]);
 
     const value = h("div", { class: "cell-value" }, [

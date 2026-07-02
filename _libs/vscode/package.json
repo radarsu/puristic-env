@@ -82,8 +82,8 @@
             "properties": {
                 "puristic.configFileGlob": {
                     "type": "string",
-                    "default": "**/env.config.{ts,mts,cts,js,mjs,cjs}",
-                    "description": "Glob used to discover env config definition files."
+                    "default": "**/*config.{ts,mts,cts,js,mjs,cjs}",
+                    "description": "Glob used to discover env config definition files. Matched files are loaded; those that don't export an env schema (e.g. vite.config.ts) are skipped."
                 },
                 "puristic.envFileGlob": {
                     "type": "string",

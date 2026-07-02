@@ -37,9 +37,12 @@ function renderFile(state: AppState, fileId: string): HTMLElement {
         return h("div");
     }
     const selected = state.selectedFileId === fileId;
+    // A file governed by more than one schema (a shared root .env) lists the apps it spans.
+    const apps = file.apps !== undefined && file.apps.length > 1 ? file.apps.join(", ") : undefined;
     return h("button", { class: `file-item${selected ? " selected" : ""}`, "data-action": "select-file", "data-file": fileId }, [
         statusIcon(file.badge),
         h("span", { class: "file-name", text: file.fileName }),
+        apps !== undefined ? h("span", { class: "file-apps", title: `Shared by ${apps}`, text: apps }) : undefined,
         file.dirty ? h("span", { class: "dirty-dot", title: "Unsaved changes", text: "●" }) : undefined,
     ]);
 }

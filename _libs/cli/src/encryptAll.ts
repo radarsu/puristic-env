@@ -1,17 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
-import {
-    encrypt,
-    inspectSchema,
-    isEnvelope,
-    listEntries,
-    loadDefinition,
-    parseEnv,
-    resolvePublicKey,
-    serializeEnv,
-    setValue,
-} from "@puristic/env/index.js";
-import { findGoverningConfig } from "./discoverConfig.js";
+import { encrypt, isEnvelope, listEntries, parseEnv, resolvePublicKey, serializeEnv, setValue } from "@puristic/env/index.js";
+import { loadWorkspace } from "./workspace.js";
 
 export interface EncryptAllOptions {
     envFiles: string[];
@@ -23,37 +13,25 @@ export interface EncryptAllResult {
     files: { path: string; encrypted: number }[];
 }
 
-// Encrypt every plaintext value at a secret-marked key, in place, preserving file formatting.
+// Encrypt every plaintext value at a secret-marked key, in place, preserving file formatting. A key is
+// secret if any of the schemas governing the file marks it secret (union across the file's apps).
 export async function encryptAll(options: EncryptAllOptions): Promise<EncryptAllResult> {
     const cwd = options.cwd ?? process.cwd();
-    const override = options.config !== undefined ? resolve(cwd, options.config) : undefined;
-    const secretsByConfig = new Map<string, Set<string>>();
+    const workspace = await loadWorkspace(cwd, options.config);
 
     const files: { path: string; encrypted: number }[] = [];
     for (const file of options.envFiles) {
         const envPath = resolve(cwd, file);
-        const configPath = override ?? findGoverningConfig(dirname(envPath));
-        if (configPath === undefined) {
-            throw new Error(`No env.config.* governs ${envPath}. Pass --config <path>.`);
+        const configs = workspace.configsFor(envPath);
+        if (configs.length === 0) {
+            throw new Error(`No env config governs ${envPath}. Pass --config <path>.`);
         }
-        files.push(encryptFile(cwd, envPath, await secretEnvNames(configPath, secretsByConfig)));
+        const secrets = new Set(
+            configs.flatMap((config) => config.descriptors.filter((descriptor) => descriptor.secret).map((descriptor) => descriptor.envName)),
+        );
+        files.push(encryptFile(cwd, envPath, secrets));
     }
     return { files };
-}
-
-async function secretEnvNames(configPath: string, cache: Map<string, Set<string>>): Promise<Set<string>> {
-    const cached = cache.get(configPath);
-    if (cached !== undefined) {
-        return cached;
-    }
-    const definition = await loadDefinition(configPath);
-    const secrets = new Set(
-        inspectSchema(definition.schema)
-            .filter((descriptor) => descriptor.secret)
-            .map((descriptor) => descriptor.envName),
-    );
-    cache.set(configPath, secrets);
-    return secrets;
 }
 
 function encryptFile(cwd: string, envPath: string, secrets: Set<string>): { path: string; encrypted: number } {
