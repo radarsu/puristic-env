@@ -17,8 +17,13 @@ export function renderBanner(state: AppState): HTMLElement {
     const hasEncryptedSecrets = files.some((file) => file.rows.some((row) => row.secret && row.isEncrypted));
     const revealLocked = !landscape.privateKeyAvailable && hasEncryptedSecrets;
 
-    const ok = missing === 0 && invalid === 0;
-    const title = ok ? "All required variables present" : `${missing} missing required variable${missing === 1 ? "" : "s"}`;
+    const configErrors = files.filter((file) => file.configError !== undefined).length;
+    const ok = missing === 0 && invalid === 0 && configErrors === 0;
+    const title = ok
+        ? "All required variables present"
+        : missing > 0
+          ? `${missing} missing required variable${missing === 1 ? "" : "s"}`
+          : `${configErrors} config${configErrors === 1 ? "" : "s"} failed to load`;
     const detail = `${invalid} invalid across ${services} service${services === 1 ? "" : "s"}.`;
 
     const message = h("div", { class: "banner-message" }, [

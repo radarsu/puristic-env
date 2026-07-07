@@ -39,8 +39,10 @@ export function extractDefinition(module: Record<string, unknown>): ConfigDefini
     if (isZodSchema(bare)) {
         return { schema: bare, sources: [] };
     }
+    const found = Object.keys(module).filter((key) => key !== "__esModule");
+    const foundNote = found.length === 0 ? "Found no exports." : `Found: ${found.join(", ")}.`;
     throw new NotAnEnvConfigError(
-        "env.config must export a ConfigDefinition (default, `config`, or `definition`) with a `schema`, or a bare zod `schema` export.",
+        `env.config must export a ConfigDefinition as \`default\`, \`config\`, or \`definition\` (or a bare zod \`schema\`). ${foundNote} If you build the definition locally, add \`export default definition\`.`,
     );
 }
 

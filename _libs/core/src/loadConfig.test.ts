@@ -32,4 +32,10 @@ describe("extractDefinition", () => {
     it("throws NotAnEnvConfigError for a module that exports no schema (e.g. vite.config)", () => {
         expect(() => extractDefinition({ default: { plugins: [] } })).toThrow(NotAnEnvConfigError);
     });
+
+    it("names the found exports and suggests `export default` when the definition isn't exported", () => {
+        expect(() => extractDefinition({ loadConfig: () => ({}), CONFIG_SECRETS: [] })).toThrow(
+            /Found: loadConfig, CONFIG_SECRETS\..*export default definition/,
+        );
+    });
 });
